@@ -1,0 +1,36 @@
+# P5 배포용: 서버 한 대에서 DB와 API를 함께 띄운다. 사용법은 docs/deploy_p5.md
+# 저장소 루트에서:  docker compose -f deploy/compose.deploy.yaml --env-file deploy/deploy.env up -d db
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: pharma_admin
+      POSTGRES_PASSWORD: ${DB_ADMIN_PASSWORD:?deploy.env에 DB_ADMIN_PASSWORD가 필요하다}
+      POSTGRES_DB: pharma
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pharma_admin -d pharma"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: "no"
+    # ports를 열지 않는다: DB는 이 compose 네트워크 안(api 컨테이너)에서만 접근된다.
+
+  api:
+    build:
+      context: ..          # 저장소 루트의 Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${API_PORT:-8000}:8000"
+    environment:
+      PHARMA_API_KEY: ${PHARMA_API_KEY:?deploy.env에 PHARMA_API_KEY가 필요하다}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:?deploy.env에 ANTHROPIC_API_KEY가 필요하다}
+      PHARMA_RO_DSN: postgresql://pharma_ro:${DB_RO_PASSWORD:?}@db:5432/pharma
+      PHARMA_EXT_DSN: postgresql://pharma_ext:${DB_EXT_PASSWORD:?}@db:5432/pharma
+    restart: "no"
+
+volumes:
+  pgdata:

@@ -6,3 +6,8 @@ __pycache__/
 .ruff_cache/
 /data/
 /infra/pgdata/
+
+# P5 배포: 비밀과 덤프는 커밋하지 않는다
+deploy/deploy.env
+deploy/*.sql.gz
+*.pem
