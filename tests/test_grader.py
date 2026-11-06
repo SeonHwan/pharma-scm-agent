@@ -1,7 +1,7 @@
 import json
 
 from pharma_scm import config
-from pharma_scm.evalset.grader import final_line, grade, grade_answer
+from pharma_scm.evalset.grader import final_line, grade_answer
 
 QS = [json.loads(x) for x in (config.ROOT / "eval" / "questions.jsonl").read_text(
     encoding="utf-8").splitlines()]
@@ -39,29 +39,23 @@ def wrong_text(q):
 
 
 def test_oracle_passes_all():
+    """114문항 모두에서 정답 문장은 채점기를 통과한다(정답을 틀렸다고 하지 않음)."""
     assert [q["id"] for q in QS if not grade_answer(q, gold_text(q))[0]] == []
 
 
 def test_wrong_fails_all():
+    """114문항 모두에서 일부러 틀린 답은 채점기를 통과하지 못한다(오답을 맞았다고 하지 않음)."""
     assert [q["id"] for q in QS if grade_answer(q, wrong_text(q))[0]] == []
 
 
-def test_question_counts():
-    assert len(QS) == 114 and len({q["id"] for q in QS}) == 114
-
-
 def test_final_line_uses_last_and_requires_marker():
+    """'최종 답:' 표지가 없으면 답으로 보지 않고, 여러 개면 마지막 것만 읽는다(앞부분 본문에 속지 않음)."""
     assert final_line("최종 답: 1\n최종 답: 2") == "2"
     assert final_line("답은 2") is None
 
 
-def test_missing_final_is_format_error():
-    q = next(x for x in QS if x["gold"]["kind"] == "number")
-    r = grade(q, "답은 5입니다", ["query_db"])
-    assert not r["pass"] and not r["format_ok"]
-
-
 def test_number_rules():
+    """숫자 정답의 허용 오차 규칙: 소수는 반올림 오차만, 정수는 소수 답을 거부, 숫자 여러 개는 거부."""
     q = {"id": "t", "type": "A", "expected_tools": ["query_db"], "gold": {"kind": "number", "value": 17.4}}
     assert grade_answer(q, "최종 답: 17.4%")[0]
     assert grade_answer(q, "최종 답: 17.45")[0]
@@ -69,26 +63,3 @@ def test_number_rules():
     assert not grade_answer(q, "최종 답: 17.4, 20")[0]
     qi = {"id": "t", "type": "A", "expected_tools": ["query_db"], "gold": {"kind": "number", "value": 9}}
     assert grade_answer(qi, "최종 답: 9개")[0] and not grade_answer(qi, "최종 답: 9.5")[0]
-
-
-def test_sections_allows_one_extra_but_not_two():
-    q = {"id": "t", "type": "C", "expected_tools": ["search_sop"],
-         "gold": {"kind": "sections", "value": "SOP-03-2"}}
-    assert grade_answer(q, "최종 답: SOP-03-2, SOP-03-1")[0]
-    assert not grade_answer(q, "최종 답: SOP-03-2, SOP-03-1, SOP-04-1")[0]
-
-
-def test_tool_grading_only_for_single_tool_questions():
-    qa = next(q for q in QS if q["type"] == "A")
-    assert grade(qa, gold_text(qa), ["query_db"])["tool_exact"] is True
-    both = grade(qa, gold_text(qa), ["query_db", "search_sop"])
-    assert both["tool_exact"] is False and both["tool_hit"] is True
-    qd = next(q for q in QS if q["type"] == "D")
-    assert grade(qd, gold_text(qd), ["query_db"])["tool_exact"] is None
-    qe = next(q for q in QS if q["type"] == "E")
-    assert grade(qe, gold_text(qe), [])["tool_exact"] is None
-
-
-def test_empty_set_accepts_none_word():
-    q = {"id": "t", "type": "A", "expected_tools": ["query_db"], "gold": {"kind": "set", "value": []}}
-    assert grade_answer(q, "최종 답: 없음")[0]

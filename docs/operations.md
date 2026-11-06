@@ -42,11 +42,13 @@ curl -s localhost:8000/ask -H "X-API-Key: $PHARMA_API_KEY" -H "Content-Type: app
 - **질문 본문은 로그에 남기지 않는다**(민감 정보 가능성). 대신 디버깅할 때 질문을 알 수 없다.
 
 ## 테스트
-`uv run pytest -q` → DB가 있으면 73개 통과, 없으면 65개 통과 + 8개 건너뜀(DB가 필요한 `test_tools.py` 7개, `test_graph.py` 1개).
-- `test_api.py`: 인증, 요청 ID, 검증 오류 형식, 타임아웃, loop_limit, 빈 답, 모델 서비스 오류 매핑, 내부 오류 비노출, rate limit, 로그 내용(질문·키 비노출). LLM은 주입한 가짜 함수.
-- `test_graph.py`: 가짜 모델로 그래프 흐름, 거부된 SQL이 모델에 전달되는지, 루프 상한, 단계별 시간 콜백.
-- `test_sql_guard.py`(22개), `test_tools.py`(8개), `test_grader.py`(9개), `test_ratelimit.py`(2개).
-- CI(`.github/workflows/ci.yml`): ruff, pytest, docker build. **GitHub Actions에서 실행해 통과를 확인했다**(2026-11-06 push: ruff 통과, pytest 65 passed·8 skipped, docker build 성공). CI에는 원본 데이터와 Postgres가 없어 DB 테스트 8개는 건너뛰므로, 그 부분은 CI가 검증하지 않고 로컬(DB를 띄운 상태)에서만 확인된다.
+`uv run pytest -q` → DB가 있으면 36개 통과, 없으면 32개 통과 + 4개 건너뜀(DB가 필요한 `test_tools.py` 4개).
+테스트는 **틀리면 피해가 큰 로직(보안·인증·비용 폭주·정보 유출·채점 신뢰도)만** 남겼다. 각 테스트 함수의 docstring에 무엇을 확인하는지 적었다.
+- `test_api.py`(9개): 키 없이 시작 거부, 인증(401), 정상 경로, 타임아웃(504), 내부 오류 비노출, rate limit(429), 로그에 질문·키 비노출. LLM은 주입한 가짜 함수.
+- `test_sql_guard.py`(15개): 위험·허용 밖 SQL 거부. `test_tools.py`(5개): 거부 SQL, 조회 결과·200행 절단, 결품 상태 구분(4개는 DB 필요).
+- `test_graph.py`(2개): 거부된 SQL이 모델에 전달되는지, 도구 호출 루프 상한. `test_grader.py`(4개): 114문항 정답 통과·오답 거부, 마지막 `최종 답:`만 읽기, 숫자 허용 오차. `test_ratelimit.py`(1개).
+- 정리 전에는 73개였다(요청 ID 형식, 검증 오류 형식, ready 검사, 단계별 시간, 허용 SQL 등 비교적 가벼운 확인 포함). 필요하면 커밋 `033cfc7`의 `tests/`에서 복구할 수 있다.
+- CI(`.github/workflows/ci.yml`): ruff, pytest, docker build. **GitHub Actions에서 실행해 통과를 확인했다**(2026-11-06 push: ruff 통과, pytest 65 passed·8 skipped(테스트 정리 전 기준), docker build 성공). CI에는 원본 데이터와 Postgres가 없어 DB 테스트(4개)는 건너뛰므로, 그 부분은 CI가 검증하지 않고 로컬(DB를 띄운 상태)에서만 확인된다.
 
 ## 한 것 / 안 한 것 / 한계
 - **한 것**: 위 장치 전부를 구현했고 로컬에서 테스트와 서버·컨테이너 실행(`/health`, `/ready`, 401)으로 확인했다.
