@@ -4,7 +4,7 @@
 
 - 데이터 구성·규칙·한계: `docs/data_mapping.md`
 - 설계: `docs/design.md`, 평가 사전 등록: `docs/eval_protocol.md`
-- 출처: DataCo Smart Supply Chain (CC BY 4.0, 가공함), openFDA 결품 데이터. 자세한 표기는 `docs/data_mapping.md`.
+- 출처: DataCo Smart Supply Chain (CC BY 4.0, 가공함), openFDA 결품 데이터. 자세한 표기는 `docs/data_mapping.md`. 가공한 DB 스냅샷(`deploy/pharma.sql.gz`)에도 같은 출처 표기가 적용된다.
 
 ```bash
 docker compose up -d db && uv sync

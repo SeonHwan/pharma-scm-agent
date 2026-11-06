@@ -41,7 +41,7 @@
 - `git`, `ssh`, `scp`, `curl`, `openssl` (macOS 기본 포함). **Docker는 맥북에 필요 없다**(서버에서 빌드)
 - GitHub 저장소 접근(private): `gh auth login` 또는 SSH 키
 - Anthropic Console 접근(배포 전용 키를 새로 만들기 위해)
-- 이 PC에서 만든 데이터 파일 `deploy/pharma.sql.gz`(1.4MB). 5장 참고
+- 데이터 파일 `deploy/pharma.sql.gz`(1.4MB)는 **저장소에 포함**되어 있어 `git clone`하면 같이 받아진다(5장 참고)
 
 ```bash
 git clone https://github.com/SeonHwan/pharma-scm-agent.git
@@ -70,12 +70,13 @@ chmod 600 deploy/deploy.env
 
 `deploy.env`는 `.gitignore`에 있어 커밋되지 않는다. 셸 기록에 키가 남지 않도록 **키는 명령줄에 직접 치지 말고 편집기로 붙여 넣는다.**
 
-## 5. 데이터 파일 옮기기
+## 5. 데이터 파일 (저장소에 포함)
 
-DB 내용(합성·변환 데이터)은 저장소에 없고 이 PC의 Postgres에만 있다. 덤프(1.4MB, gzip)를 이미 만들어 두었다.
+DB 내용(DataCo 변환 데이터, openFDA 결품 스냅샷, 합성 데이터)의 덤프(1.4MB, gzip)가 **저장소의 `deploy/pharma.sql.gz`로 들어 있다.** 2장에서 `git clone`하면 받아지고, 7장의 `git archive`에도 포함되어 서버로 올라간다. **따로 옮길 필요가 없다.**
 
-- 위치: 이 PC의 `~/pharma-scm-agent/deploy/pharma.sql.gz` (`.gitignore`에 있어 저장소에 올라가지 않는다)
-- 맥북으로 옮기기: 본인에게 메일·메신저·클라우드 드라이브·USB 등 편한 방법으로 보내 맥북의 `pharma-scm-agent/deploy/` 폴더에 둔다. **저장소(GitHub)에 올리지 않는다.**
+- 데이터 출처 표기(CC BY 4.0, 가공함)는 `README.md`와 `docs/data_mapping.md`에 있고 이 스냅샷에도 같이 적용된다.
+- 고객 정보 컬럼은 없다(`sales_orders`는 주문 번호·수량·날짜 등). 다만 openFDA 공개 결품 통지문 안에 업체 연락처 등 **공개된 업체 정보**가 들어 있다.
+- 이 저장소를 **공개로 바꾸기 전에** 위 파일의 공개 여부를 다시 한 번 판단한다(한 번 올린 파일은 커밋 이력에 남는다).
 - 다시 만들어야 하면(이 PC에서, DB 컨테이너가 떠 있을 때):
   ```bash
   docker compose exec -T db pg_dump -U pharma_admin -d pharma --no-owner | gzip > deploy/pharma.sql.gz
@@ -127,8 +128,8 @@ echo "서버 IP: $IP"
 
 **(맥북) 소스와 비밀·데이터 올리기**
 ```bash
-git archive --format=tar.gz -o /tmp/pharma-src.tgz HEAD     # 커밋된 파일만. deploy.env·덤프는 포함되지 않는다
-scp -i ~/.ssh/pharma-p5.pem /tmp/pharma-src.tgz deploy/deploy.env deploy/pharma.sql.gz ec2-user@"$IP":~/
+git archive --format=tar.gz -o /tmp/pharma-src.tgz HEAD     # 커밋된 파일만. deploy/pharma.sql.gz는 포함되고 deploy.env는 포함되지 않는다
+scp -i ~/.ssh/pharma-p5.pem /tmp/pharma-src.tgz deploy/deploy.env ec2-user@"$IP":~/
 ssh -i ~/.ssh/pharma-p5.pem ec2-user@"$IP"
 ```
 처음 접속하면 호스트 지문 확인 질문에 `yes`.
@@ -139,7 +140,7 @@ cloud-init status --wait            # user-data(Docker 설치)가 끝날 때까�
 docker compose version              # 버전이 나와야 한다
 
 mkdir app && tar -xzf pharma-src.tgz -C app
-mv deploy.env pharma.sql.gz app/deploy/
+mv deploy.env app/deploy/            # 덤프는 tgz 안에 이미 app/deploy/에 들어 있다
 cd app
 DC="docker compose -f deploy/compose.deploy.yaml --env-file deploy/deploy.env"
 
@@ -194,7 +195,7 @@ aws ec2 describe-security-groups --filters Name=group-name,Values=pharma-p5 --qu
 ```
 그리고
 - Anthropic Console에서 **배포 전용 키를 삭제**한다.
-- 맥북의 `deploy/deploy.env`와 `deploy/pharma.sql.gz`를 삭제한다(`rm`). 이 PC의 파일은 그대로 둔다.
+- 맥북의 `deploy/deploy.env`를 삭제한다(`rm`). 덤프는 저장소 파일이라 그대로 둔다.
 - 다음 날 Billing 화면에서 실제 비용을 확인한다. 예산 알림은 두거나 삭제한다.
 
 ## 10. 끝난 뒤 기록

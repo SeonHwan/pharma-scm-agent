@@ -7,7 +7,6 @@ __pycache__/
 /data/
 /infra/pgdata/
 
-# P5 배포: 비밀과 덤프는 커밋하지 않는다
+# P5 배포: 비밀은 커밋하지 않는다(DB 덤프 deploy/pharma.sql.gz는 공개 가능한 변환·합성 데이터라 커밋한다)
 deploy/deploy.env
-deploy/*.sql.gz
 *.pem
