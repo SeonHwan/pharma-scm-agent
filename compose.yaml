@@ -1,0 +1,13 @@
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: pharma_admin
+      POSTGRES_PASSWORD: local-dev-only
+      POSTGRES_DB: pharma
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:

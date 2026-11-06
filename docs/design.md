@@ -1,6 +1,6 @@
-# pharma-scm-agent 설계 초안 (2026-11-03, 승인 전)
+# pharma-scm-agent 설계 (2026-11-03, 승인됨)
 
-제약 SCM 재고·결품 질의 에이전트. 제약 SCM 직무에서 흔히 요구하는 역량(SCM workflow의 LLM/RAG/Agentic 서비스화, SQL·데이터 파이프라인, 배포·운영, Logging·Metrics, CI/CD·테스트, 인증·보안)에 맞춘다. 이 문서는 **설계만** 다룬다. 코드는 승인 후.
+제약 SCM 재고·결품 질의 에이전트. 제약 SCM 직무에서 흔히 요구하는 역량(SCM workflow의 LLM/RAG/Agentic 서비스화, SQL·데이터 파이프라인, 배포·운영, Logging·Metrics, CI/CD·테스트, 인증·보안)에 맞춘다. 이 문서는 설계를 다룬다. 구현에서 확정된 사항은 §8에 적고, 데이터 규칙의 상세는 `docs/data_mapping.md`, 평가 규칙은 `docs/eval_protocol.md`에 있다.
 
 ## 0. 이 프로젝트가 아닌 것 (먼저 적는 한계)
 - 실제 제약사 내부 데이터가 아니다. 재고·로트·유통기한·공급사·발주는 **결정적으로 생성한 합성 데이터**다.
@@ -11,7 +11,7 @@
 
 | 테이블 | 출처 | 비고 |
 |---|---|---|
-| `products` | openFDA 결품 기록의 generic_name·strength·package_ndc에서 뽑은 약 50~100개 | SKU는 합성 id |
+| `products` | openFDA 결품 기록의 성분명 80개 + 결품 기록 없는 성분 10개 = 90 SKU | SKU는 합성 id (`strength` 필드는 openFDA에 없음) |
 | `sales_orders` | DataCo의 주문일·수량·실제 배송일수·계획 배송일수·지연 여부를 SKU에 매핑 | CC BY 4.0(버전 4·5, 출처 표기). 매핑 규칙은 코드에 고정 |
 | `suppliers`, `purchase_orders` | 합성 | 리드타임 분포는 시드 고정 난수 |
 | `inventory_lots` | 합성 | lot, 수량, 유통기한, 보관 창고, 안전재고 기준 |
@@ -71,7 +71,15 @@
 6. 운영 요건(§5)
 
 ## 7. 아직 모르는 것·결정할 것
-- openFDA 결품 엔드포인트 경로(`/drug/shortages.json` 또는 `/drug/drugshortages.json`)와 필드: 아직 직접 호출해서 확인하지 못했다.
+- ~~openFDA 결품 엔드포인트 경로~~ → `/drug/shortages.json`으로 확인(`drugshortages.json`은 응답 없음). 필드는 §8.
 - DataCo 컬럼을 약품 SKU에 매핑하는 규칙의 타당성: 실제 약품 수요와 무관한 대역임을 문서에 명시한다.
 - 에이전트 구조: 단일 에이전트(도구 3개)로 시작할지, supervisor + 전문가로 갈지. 도구가 3개뿐이라 단일로 시작하고 기준선으로 삼는 것을 제안한다. 멀티는 이후 비교용.
 - 모델: 1주차와 같은 Claude Sonnet 5.5(에이전트) + gpt-5.6-terra(채점).
+
+## 8. 구현에서 확정한 것 (2026-11-03)
+- **결품 상태**: 성분명 단위로 Current > To Be Discontinued > Resolved > 기록 없음 순으로 하나를 고른다. 단종 예정은 현재 부족이 아니다.
+- **도구 권한 분리**: `query_db` 계정(`pharma_ro`)은 `shortage_events`·`sop_sections`를 읽을 수 없다. `get_shortage`·`search_sop`은 별도 읽기 전용 계정(`pharma_ext`)을 쓴다. `query_db`는 실행 전에 sqlglot으로 SELECT 단일 문·허용 테이블·금지 함수를 검사한다(`agent/sql_guard.py`). 결품은 `get_shortage`, 규정은 `search_sop`만 답할 수 있어서 질문마다 정답 도구가 하나로 정해진다. 복합(D)만 두 도구를 쓴다.
+- **복합 질문의 범위**: 한 번에 전체 SKU를 훑지 않도록 성분 1~3개로 한정했다(`get_shortage`는 성분명 하나씩 조회).
+- **에이전트 구조**: 단일 에이전트(도구 3개)로 시작한다. 멀티 에이전트는 이후 비교용.
+- **답 형식**: 마지막 줄 `최종 답: ...`(자동 채점용). 규칙은 `docs/eval_protocol.md`.
+- openFDA 필드: `generic_name`, `package_ndc`, `status`(Current 1153 / To Be Discontinued 450 / Resolved 19), `dosage_form`, `presentation`, `company_name`, `therapeutic_category`, 날짜 4종, `update_type`, `availability`, `shortage_reason`, `resolved_note`, `related_info`.
