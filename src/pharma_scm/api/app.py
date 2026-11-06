@@ -17,7 +17,7 @@ from contextlib import asynccontextmanager
 
 import anthropic
 import psycopg
-from fastapi import Depends, FastAPI, Header, Request
+from fastapi import Depends, FastAPI, Header
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
@@ -30,20 +30,14 @@ from ..agent.prompt import PROMPT_VERSION
 from ..agent.run import ask
 from .logging_json import request_id_var, setup_logging
 from .ratelimit import RateLimiter
-from collections.abc import AsyncGenerator, Awaitable, Callable
-from typing import Any
-from langchain_core.callbacks import BaseCallbackHandler
-from fastapi.responses import Response
-from ..typedefs import AgentFn, AskResult
-from .settings import Settings
+from ..typedefs import AgentFn
 
 _RID = re.compile(r"[A-Za-z0-9_-]{1,64}")
 log = logging.getLogger("pharma.api")
 
 
 class ApiError(Exception):
-    def __init__(self, status: int, code: str, message: str,
-                 headers: dict[str, str] | None = None) -> None:
+    def __init__(self, status, code, message, headers=None):
         self.status, self.code, self.message, self.headers = status, code, message, headers or {}
 
 
@@ -52,7 +46,7 @@ class AskRequest(BaseModel):
     question: str = Field(min_length=1, max_length=1000)
 
 
-def default_ready_checks() -> dict[str, str]:
+def default_ready_checks():
     """외부 호출 없이 준비 상태만 본다(DB 연결, API 키 존재)."""
     config.load_env()
     checks = {}
@@ -67,7 +61,7 @@ def default_ready_checks() -> dict[str, str]:
     return checks
 
 
-def make_real_agent() -> AgentFn:
+def make_real_agent():
     """진짜 에이전트를 만들어 호출 함수 fn(question, callbacks) -> ask() 결과 dict를 돌려준다."""
     graph = build_graph()
     return lambda q, cb: ask(q, graph, callbacks=cb)
@@ -79,21 +73,20 @@ class AgentRunner:
     호출 함수가 만들어지는 곳은 get() 안의 한 줄뿐이다.
     """
 
-    def __init__(self, factory: Callable[[], AgentFn]) -> None:
+    def __init__(self, factory):
         self._factory = factory
         self._fn: AgentFn | None = None
 
-    def get(self) -> AgentFn:
+    def get(self):
         if self._fn is None:
             self._fn = self._factory()
         return self._fn
 
-    def run(self, question: str, callbacks: list[BaseCallbackHandler]) -> AskResult:
+    def run(self, question, callbacks):
         return self.get()(question, callbacks)
 
 
-def create_app(settings: Settings, agent_factory: Callable[[], AgentFn] | None = None,
-               ready_checks: Callable[[], dict[str, str]] | None = None) -> FastAPI:
+def create_app(settings, agent_factory=None, ready_checks=None):
     """agent_factory() -> fn(question, callbacks). 기본은 진짜 에이전트, 테스트는 가짜를 주입한다."""
     if not settings.api_keys:
         raise RuntimeError("PHARMA_API_KEY가 설정되지 않았다(인증 없이 서버를 띄우지 않는다)")
@@ -103,7 +96,7 @@ def create_app(settings: Settings, agent_factory: Callable[[], AgentFn] | None =
     agent = AgentRunner(agent_factory or make_real_agent)
 
     @asynccontextmanager
-    async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
+    async def lifespan(app):
         agent.get()  # 서버 시작 때 만들어 두면 모델 키가 없을 때 첫 요청이 아니라 시작에서 실패한다
         yield
 
@@ -111,8 +104,7 @@ def create_app(settings: Settings, agent_factory: Callable[[], AgentFn] | None =
     key_bytes = [k.encode() for k in settings.api_keys]
 
     @app.middleware("http")
-    async def request_context(request: Request,
-                              call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+    async def request_context(request, call_next):
         rid = request.headers.get("x-request-id", "")
         if not _RID.fullmatch(rid):
             rid = uuid.uuid4().hex
@@ -130,27 +122,26 @@ def create_app(settings: Settings, agent_factory: Callable[[], AgentFn] | None =
                                        "duration_ms": round((time.perf_counter() - t0) * 1000, 1)})
             request_id_var.reset(token)
 
-    def _error(status: int, code: str, message: str,
-               headers: dict[str, str] | None = None) -> JSONResponse:
+    def _error(status, code, message, headers=None):
         return JSONResponse({"error": {"code": code, "message": message,
                                        "request_id": request_id_var.get()}},
                             status_code=status, headers=headers)
 
     @app.exception_handler(ApiError)
-    async def _api_error(request: Request, exc: ApiError) -> JSONResponse:
+    async def _api_error(request, exc):
         return _error(exc.status, exc.code, exc.message, exc.headers)
 
     @app.exception_handler(RequestValidationError)
-    async def _validation(request: Request, exc: RequestValidationError) -> JSONResponse:
+    async def _validation(request, exc):
         fields = sorted({".".join(str(p) for p in e["loc"] if p != "body") for e in exc.errors()})
         return _error(422, "bad_request", f"요청 형식 오류: {', '.join(fields)}")
 
     @app.exception_handler(StarletteHTTPException)
-    async def _http(request: Request, exc: StarletteHTTPException) -> JSONResponse:
+    async def _http(request, exc):
         return _error(exc.status_code, "not_found" if exc.status_code == 404 else "http_error",
                       str(exc.detail))
 
-    def require_key(x_api_key: str | None = Header(default=None)) -> str:
+    def require_key(x_api_key: str | None = Header(default=None)):
         given = (x_api_key or "").encode()
         if not any(hmac.compare_digest(given, k) for k in key_bytes) or not given:
             raise ApiError(401, "unauthorized", "API 키가 없거나 올바르지 않다")
@@ -161,22 +152,22 @@ def create_app(settings: Settings, agent_factory: Callable[[], AgentFn] | None =
         return key_id
 
     @app.get("/health")
-    def health() -> dict[str, str]:
+    def health():
         return {"status": "ok"}
 
     @app.get("/ready")
-    def ready() -> JSONResponse:
+    def ready():
         checks = (ready_checks or default_ready_checks)()
         ok = all(v == "ok" for v in checks.values())
         return JSONResponse({"status": "ready" if ok else "not_ready", "checks": checks},
                             status_code=200 if ok else 503)
 
     @app.post("/ask")
-    async def ask_endpoint(body: AskRequest, key_id: str = Depends(require_key)) -> dict[str, Any]:
+    async def ask_endpoint(body: AskRequest, key_id=Depends(require_key)):
         cb = TimingCallback()
         t0 = time.perf_counter()
 
-        async def run() -> AskResult:
+        async def run():
             async with sem:
                 return await asyncio.to_thread(agent.run, body.question, [cb])
 

@@ -3,13 +3,12 @@
 import re
 
 from . import config
-import psycopg
 
 _H1 = re.compile(r"^# (SOP-\d+) (.+)$")
 _H2 = re.compile(r"^## (SOP-\d+-\d+) (.+)$")
 
 
-def read_sections() -> list[tuple[str, str, str, str, str]]:
+def read_sections():
     rows = []
     for path in sorted(config.SOP_DIR.glob("SOP-*.md")):
         doc_id = doc_title = None
@@ -26,7 +25,7 @@ def read_sections() -> list[tuple[str, str, str, str, str]]:
     return [(sid, d, dt, t, "\n".join(b).strip()) for sid, d, dt, t, b in rows]
 
 
-def load(conn: psycopg.Connection) -> list[tuple[str, str, str, str, str]]:
+def load(conn):
     rows = read_sections()
     with conn.cursor() as cur:
         cur.executemany(

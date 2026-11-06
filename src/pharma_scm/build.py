@@ -1,6 +1,5 @@
 """전체 데이터를 처음부터 다시 만든다(멱등). 실행: uv run python -m pharma_scm.build"""
 
-from typing import Any
 
 import psycopg
 
@@ -10,7 +9,7 @@ _TABLES = ["suppliers", "products", "sales_orders", "inventory_lots", "purchase_
            "shortage_events", "sop_sections"]
 
 
-def checksums(conn: psycopg.Connection) -> dict[str, Any]:
+def checksums(conn):
     out = {}
     with conn.cursor() as cur:
         for t in _TABLES:
@@ -20,7 +19,7 @@ def checksums(conn: psycopg.Connection) -> dict[str, Any]:
     return out
 
 
-def main() -> None:
+def main():
     schema = (config.ROOT / "src" / "pharma_scm" / "schema.sql").read_text(encoding="utf-8")
     with psycopg.connect(config.ADMIN_DSN) as conn:
         conn.execute(schema)

@@ -10,8 +10,6 @@ import psycopg
 
 from .. import config, synth
 from .grader import STATUS_LABELS
-from typing import Any
-from ..typedefs import Question
 
 OUT = config.ROOT / "eval" / "questions.jsonl"
 AO = config.AS_OF.isoformat()
@@ -60,30 +58,29 @@ E_QUESTIONS = [  # (질문, 위험 유형)
 ]
 
 
-def q(qid: str, typ: str, text: str, tools: list[str], gold: dict[str, Any],
-      **extra: Any) -> Question:
+def q(qid, typ, text, tools, gold, **extra):
     return {"id": qid, "type": typ, "question": text, "expected_tools": tools, "gold": gold, **extra}
 
 
-def build(conn: psycopg.Connection) -> list[Question]:
+def build(conn):
     r = synth.rng("evalset")
     cur = conn.cursor()
 
-    def one(sql: str) -> Any:
+    def one(sql):
         cur.execute(sql)
         return cur.fetchone()[0]
 
-    def col(sql: str) -> list[Any]:
+    def col(sql):
         cur.execute(sql)
         return [x[0] for x in cur.fetchall()]
 
     out, n = [], {"A": 0, "B": 0, "C": 0, "D": 0, "E": 0}
 
-    def nid(t: str) -> str:
+    def nid(t):
         n[t] += 1
         return f"{t}{n[t]:03d}"
 
-    def numq(text: str, sql: str, decimal: bool = False, **extra: Any) -> None:
+    def numq(text, sql, decimal=False, **extra):
         v = one(sql)
         v = round(float(v), 1) if decimal else int(v)
         out.append(q(nid("A"), "A", text, ["query_db"], {"kind": "number", "value": v},
@@ -155,7 +152,7 @@ def build(conn: psycopg.Connection) -> list[Question]:
     for g_, s_ in _rows(cur, "SELECT generic_name, status FROM shortage_events"):
         stat.setdefault(g_, set()).add(s_)
 
-    def label(name: str) -> str:
+    def label(name):
         st = stat.get(name, set())
         for k in ("Current", "To Be Discontinued", "Resolved"):
             if k in st:
@@ -183,7 +180,7 @@ def build(conn: psycopg.Connection) -> list[Question]:
                      over_refusal_control=ctrl))
 
     # ---- D. 복합 (get_shortage + query_db) ----
-    def stock(sku: str) -> int:
+    def stock(sku):
         return int(one(f"SELECT coalesce(sum(quantity),0) FROM inventory_lots WHERE sku='{sku}' "
                        f"AND {AVAIL}"))
 
@@ -212,12 +209,12 @@ def build(conn: psycopg.Connection) -> list[Question]:
     return out
 
 
-def _rows(cur: psycopg.Cursor[Any], sql: str) -> list[tuple[Any, ...]]:
+def _rows(cur, sql):
     cur.execute(sql)
     return cur.fetchall()
 
 
-def main() -> None:
+def main():
     with psycopg.connect(config.ADMIN_DSN) as conn:
         qs = build(conn)
     OUT.parent.mkdir(exist_ok=True)

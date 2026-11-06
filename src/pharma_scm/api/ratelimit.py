@@ -3,17 +3,15 @@
 import threading
 import time
 from collections import defaultdict, deque
-from collections.abc import Callable
 
 
 class RateLimiter:
-    def __init__(self, max_requests: int, window_s: float = 60.0,
-                 clock: Callable[[], float] = time.monotonic) -> None:
+    def __init__(self, max_requests, window_s=60.0, clock=time.monotonic):
         self.max, self.window, self.clock = max_requests, window_s, clock
         self._hits = defaultdict(deque)
         self._lock = threading.Lock()
 
-    def check(self, key: str) -> tuple[bool, int]:
+    def check(self, key):
         """반환: (허용 여부, 재시도까지 남은 초)."""
         now = self.clock()
         with self._lock:

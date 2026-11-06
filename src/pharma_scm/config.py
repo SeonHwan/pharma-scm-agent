@@ -39,7 +39,7 @@ AGENT_MODEL = "claude-sonnet-5-5"
 JUDGE_MODEL = "gpt-5.6-terra"  # 채점 모델(P3에서 사용)
 
 
-def load_env() -> None:
+def load_env():
     """프로젝트 .env를 읽어 환경변수에 넣는다(값은 출력하지 않는다)."""
     from dotenv import dotenv_values
 

@@ -13,13 +13,12 @@ from langchain_core.tools import tool
 
 from .. import config
 from . import sql_guard
-from typing import Any
 
 MAX_ROWS = 200
 STATUS_LABEL = {"Current": "결품 중", "To Be Discontinued": "단종 예정", "Resolved": "해소됨"}
 
 
-def _jsonable(v: Any) -> Any:
+def _jsonable(v):
     if isinstance(v, Decimal):
         return int(v) if v == v.to_integral_value() else float(v)
     if isinstance(v, (date, datetime)):
@@ -27,11 +26,11 @@ def _jsonable(v: Any) -> Any:
     return v
 
 
-def _dump(obj: Any) -> str:
+def _dump(obj):
     return json.dumps(obj, ensure_ascii=False, default=_jsonable)
 
 
-def run_query_db(sql: str, dsn: str | None = None) -> str:
+def run_query_db(sql, dsn=None):
     try:
         safe = sql_guard.validate(sql)
     except sql_guard.SqlRejected as e:
@@ -50,7 +49,7 @@ def run_query_db(sql: str, dsn: str | None = None) -> str:
                   "truncated": truncated})
 
 
-def run_get_shortage(generic_name: str, dsn: str | None = None) -> str:
+def run_get_shortage(generic_name, dsn=None):
     name = generic_name.strip()
     with psycopg.connect(dsn or config.EXT_DSN, connect_timeout=5) as conn:
         conn.read_only = True
@@ -77,13 +76,13 @@ def run_get_shortage(generic_name: str, dsn: str | None = None) -> str:
                   "records_truncated": len(recs) > 10})
 
 
-def _grams(text: str) -> list[str]:
+def _grams(text):
     t = re.sub(r"\s+", "", text.lower())
     return [t[i:i + 2] for i in range(len(t) - 1)]
 
 
 @lru_cache(maxsize=1)
-def _sop_index() -> tuple[list[Any], dict[str, float]]:
+def _sop_index():
     with psycopg.connect(config.EXT_DSN, connect_timeout=5) as conn:
         conn.read_only = True
         rows = conn.execute("SELECT section_id, doc_title, title, body FROM sop_sections "
@@ -99,7 +98,7 @@ def _sop_index() -> tuple[list[Any], dict[str, float]]:
     return vecs, idf
 
 
-def run_search_sop(query: str, k: int = 3) -> str:
+def run_search_sop(query, k=3):
     vecs, idf = _sop_index()
     qv = {g: tf * idf.get(g, 0.0) for g, tf in Counter(_grams(query)).items()}
     qn = math.sqrt(sum(x * x for x in qv.values())) or 1.0
@@ -114,7 +113,7 @@ def run_search_sop(query: str, k: int = 3) -> str:
 
 
 @tool
-def query_db(sql: str) -> str:
+def query_db(sql: str):
     """재고·발주·판매 수치를 읽기 전용 SQL(PostgreSQL, SELECT만)로 조회한다.
     테이블: products, sales_orders, suppliers, purchase_orders, inventory_lots.
     결품 상태와 SOP 규정은 이 도구로 볼 수 없다. 결과는 최대 200행이다."""
@@ -122,7 +121,7 @@ def query_db(sql: str) -> str:
 
 
 @tool
-def get_shortage(generic_name: str) -> str:
+def get_shortage(generic_name: str):
     """성분명(generic_name, products.generic_name과 같은 형식, 예: 'Clonazepam Tablet')으로
     openFDA 결품 스냅샷(2026-11-02)을 조회한다.
     summary_status는 성분 단위 판정이다: Current가 하나라도 있으면 '결품 중', 없고 To Be
@@ -132,7 +131,7 @@ def get_shortage(generic_name: str) -> str:
 
 
 @tool
-def search_sop(query: str) -> str:
+def search_sop(query: str):
     """SOP(표준작업절차서) 섹션을 검색해 관련도 높은 상위 3개를 돌려준다.
     보관·유통기한·격리·회수·폐기·발주·결품 대응 등 규정과 절차 질문에 쓴다.
     각 결과에 section_id가 있다. 근거로 삼은 section_id를 답에 인용한다."""

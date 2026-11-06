@@ -8,16 +8,13 @@ from langgraph.prebuilt import ToolNode, tools_condition
 from .. import config
 from .prompt import SYSTEM_PROMPT
 from .tools import TOOLS
-from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import BaseMessage
-from langgraph.graph.state import CompiledStateGraph
 
 MAX_TOOL_ROUNDS = 8
 # agent→tools 한 번이 2 step. 마지막 agent 호출 1 step을 더한다.
 RECURSION_LIMIT = MAX_TOOL_ROUNDS * 2 + 1
 
 
-def make_llm() -> ChatAnthropic:
+def make_llm():
     import os
 
     config.load_env()
@@ -27,11 +24,11 @@ def make_llm() -> ChatAnthropic:
                          timeout=60, max_retries=2)
 
 
-def build_graph(llm: BaseChatModel | None = None) -> CompiledStateGraph:
+def build_graph(llm=None):
     llm = llm or make_llm()
     bound = llm.bind_tools(TOOLS)
 
-    def agent(state: MessagesState) -> dict[str, list[BaseMessage]]:
+    def agent(state):
         return {"messages": [bound.invoke([SystemMessage(SYSTEM_PROMPT), *state["messages"]])]}
 
     g = StateGraph(MessagesState)

@@ -6,7 +6,7 @@
 
 import random
 from collections import defaultdict
-from datetime import date, timedelta
+from datetime import timedelta
 
 from . import config
 from typing import Any
@@ -35,11 +35,11 @@ _NO_RECORD = [
 ]
 
 
-def rng(name: str) -> random.Random:
+def rng(name):
     return random.Random(f"{config.SEED}:{name}")
 
 
-def suppliers() -> list[tuple[str, str, str, int, int]]:
+def suppliers():
     r = rng("suppliers")
     rows = []
     for i, (name, country) in enumerate(_SUPPLIERS, 1):
@@ -48,7 +48,7 @@ def suppliers() -> list[tuple[str, str, str, int, int]]:
     return rows
 
 
-def select_skus(records: list[dict[str, Any]]) -> list[tuple[str, str, str | None, str | None]]:
+def select_skus(records):
     """openFDA 성분명에서 층화 추출 + 결품 기록 없는 성분을 더해 SKU 목록을 만든다."""
     by_name = defaultdict(list)
     for rec in records:
@@ -84,7 +84,7 @@ def select_skus(records: list[dict[str, Any]]) -> list[tuple[str, str, str | Non
     return [(f"SKU-{i:03d}",) + it for i, it in enumerate(items, 1)]
 
 
-def monthly_demand(sales_rows: list[tuple[Any, ...]]) -> dict[str, float]:
+def monthly_demand(sales_rows):
     """SKU별 최근 6개월(182일) 월평균 주문 수량."""
     start = config.AS_OF - timedelta(days=182)
     tot = defaultdict(int)
@@ -94,9 +94,7 @@ def monthly_demand(sales_rows: list[tuple[Any, ...]]) -> dict[str, float]:
     return {sku: q / 6 for sku, q in tot.items()}
 
 
-def products(
-    sku_items: list[tuple[str, str, str | None, str | None]], demand: dict[str, float]
-) -> list[tuple[Any, ...]]:
+def products(sku_items, demand):
     r = rng("products")
     sup_ids = [s[0] for s in suppliers()]
     rows = []
@@ -108,13 +106,13 @@ def products(
     return rows
 
 
-def _split(r: random.Random, total: int, n: int) -> list[int]:
+def _split(r, total, n):
     w = [r.random() + 0.2 for _ in range(n)]
     parts = [max(1, int(total * x / sum(w))) for x in w]
     return parts
 
 
-def lots(product_rows: list[tuple[Any, ...]]) -> list[tuple[Any, ...]]:
+def lots(product_rows):
     """SKU당 1~4개 로트 + 경계 사례. 반환: [(lot_no, sku, qty, expiry, wh, status, received)]"""
     r = rng("lots")
     per_sku = {}
@@ -131,7 +129,7 @@ def lots(product_rows: list[tuple[Any, ...]]) -> list[tuple[Any, ...]]:
     pool = [p[0] for p in product_rows]
     r.shuffle(pool)
 
-    def far(qty: int) -> dict[str, Any]:
+    def far(qty):
         return dict(qty=qty, expiry=config.AS_OF + timedelta(days=400), wh=r.choice(WAREHOUSES),
                     status="available", received=config.AS_OF - timedelta(days=30))
 
@@ -168,13 +166,12 @@ def lots(product_rows: list[tuple[Any, ...]]) -> list[tuple[Any, ...]]:
     return out
 
 
-def purchase_orders(product_rows: list[tuple[Any, ...]]) -> list[tuple[Any, ...]]:
+def purchase_orders(product_rows):
     r = rng("purchase_orders")
     sup = {s[0]: s for s in suppliers()}
     raw = []
 
-    def add(sku: str, supplier_id: str, order_date: date, lead_expected: int | None,
-            actual: int, qty: int) -> None:
+    def add(sku, supplier_id, order_date, lead_expected, actual, qty):
         mean = sup[supplier_id][3]
         raw.append((order_date, sku, supplier_id,
                     order_date + timedelta(days=lead_expected if lead_expected else mean),

@@ -4,8 +4,6 @@
 """
 
 import re
-from typing import Any
-from ..typedefs import Question
 
 STATUS_LABELS = ["결품 중", "단종 예정", "해소됨", "기록 없음"]
 _FINAL = re.compile(r"^\s*최종 답\s*:\s*(.+?)\s*$", re.MULTILINE)
@@ -15,26 +13,26 @@ _SEC = re.compile(r"SOP-\d{2}-\d")
 DECIMAL_TOL = 0.05
 
 
-def final_line(text: str | None) -> str | None:
+def final_line(text):
     m = _FINAL.findall(text or "")
     return m[-1] if m else None
 
 
-def _numbers(s: str) -> list[float]:
+def _numbers(s):
     return [float(x.replace(",", "")) for x in _NUM.findall(s)]
 
 
-def _num_ok(got: float, gold: int | float) -> bool:
+def _num_ok(got, gold):
     if isinstance(gold, int):
         return got == gold
     return abs(got - gold) <= DECIMAL_TOL + 1e-9
 
 
-def _status_in(s: str) -> list[str]:
+def _status_in(s):
     return [lab for lab in STATUS_LABELS if lab in s]
 
 
-def grade_answer(q: Question, answer_text: str | None) -> tuple[bool, str]:
+def grade_answer(q, answer_text):
     """반환: (pass, reason). format 오류는 reason이 'format:'으로 시작한다."""
     fin = final_line(answer_text)
     if fin is None:
@@ -75,7 +73,7 @@ def grade_answer(q: Question, answer_text: str | None) -> tuple[bool, str]:
     raise ValueError(kind)
 
 
-def grade_tools(q: Question, tools_called: list[str]) -> tuple[bool | None, bool | None]:
+def grade_tools(q, tools_called):
     """정답 도구가 하나뿐인 질문에서만 채점한다. 반환: (exact, hit) 또는 (None, None)."""
     exp = q["expected_tools"]
     if q["type"] == "E" or len(exp) != 1:
@@ -84,7 +82,7 @@ def grade_tools(q: Question, tools_called: list[str]) -> tuple[bool | None, bool
     return called == set(exp), exp[0] in called
 
 
-def grade(q: Question, answer_text: str | None, tools_called: list[str]) -> dict[str, Any]:
+def grade(q, answer_text, tools_called):
     ok, reason = grade_answer(q, answer_text)
     exact, hit = grade_tools(q, tools_called)
     return {"id": q["id"], "type": q["type"], "pass": ok, "reason": reason,

@@ -12,19 +12,15 @@ from langgraph.errors import GraphRecursionError
 
 from .graph import MAX_TOOL_ROUNDS, RECURSION_LIMIT, build_graph
 from .prompt import PROMPT_SHA, PROMPT_VERSION, SYSTEM_PROMPT
-from typing import Any
-from langchain_core.callbacks import BaseCallbackHandler
-from ..typedefs import AskResult
 
 
-def _text(content: str | list[Any]) -> str:
+def _text(content):
     if isinstance(content, str):
         return content
     return "".join(b.get("text", "") for b in content if isinstance(b, dict))
 
 
-def ask(question: str, graph: Any = None,
-        callbacks: list[BaseCallbackHandler] | None = None) -> AskResult:
+def ask(question, graph=None, callbacks=None):
     graph = graph or build_graph()
     t0 = time.perf_counter()
     error = None
@@ -55,7 +51,7 @@ def ask(question: str, graph: Any = None,
             "prompt_version": PROMPT_VERSION, "prompt_sha": PROMPT_SHA}
 
 
-def main() -> None:
+def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("question")
     ap.add_argument("--dry-run", action="store_true", help="API를 부르지 않고 호출 규모만 본다")

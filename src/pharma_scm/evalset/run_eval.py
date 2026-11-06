@@ -16,19 +16,16 @@ from ..agent.graph import MAX_TOOL_ROUNDS, build_graph
 from ..agent.prompt import PROMPT_SHA, PROMPT_VERSION
 from ..agent.run import ask
 from .grader import grade
-from pathlib import Path
-from typing import Any
-from ..typedefs import Question
 
 QUESTIONS = config.ROOT / "eval" / "questions.jsonl"
 RESULT_CLIP = 2000
 
 
-def load_questions() -> list[Question]:
+def load_questions():
     return [json.loads(x) for x in QUESTIONS.read_text(encoding="utf-8").splitlines()]
 
 
-def run_one(q: Question, graph: Any, out_dir: Path) -> dict[str, Any]:
+def run_one(q, graph, out_dir):
     try:
         r = ask(q["question"], graph)
     except Exception as e:  # 한 문항의 실패가 전체 실행을 멈추지 않게 한다
@@ -45,7 +42,7 @@ def run_one(q: Question, graph: Any, out_dir: Path) -> dict[str, Any]:
     return r
 
 
-def main() -> None:
+def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--run-id", default=f"main_{PROMPT_VERSION}")
     ap.add_argument("--workers", type=int, default=4)

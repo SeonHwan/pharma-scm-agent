@@ -13,7 +13,7 @@ class SqlRejected(ValueError):
     pass
 
 
-def validate(sql: str) -> str:
+def validate(sql):
     """통과하면 정규화된 SQL 문자열을, 아니면 SqlRejected를 낸다."""
     try:
         stmts = [s for s in sqlglot.parse(sql, dialect="postgres") if s is not None]

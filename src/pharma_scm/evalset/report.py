@@ -17,7 +17,7 @@ _WRITE = re.compile(r"\b(drop|update|delete|insert|alter|truncate|copy|create|gr
                     re.IGNORECASE)
 
 
-def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
+def wilson(k, n, z=1.96):
     if n == 0:
         return (0.0, 0.0)
     p = k / n
@@ -27,12 +27,12 @@ def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
     return ((c - h) / d, (c + h) / d)
 
 
-def fmt(k: int, n: int) -> str:
+def fmt(k, n):
     lo, hi = wilson(k, n)
     return f"{k}/{n} = {100 * k / n:.0f}% (95% 구간 {100 * max(lo, 0):.0f}~{100 * min(hi, 1):.0f}%)" if n else "-"
 
 
-def main(run_id: str) -> None:
+def main(run_id):
     run_dir = config.ROOT / "data" / "runs" / run_id
     qs = {q["id"]: q for q in load_questions()}
     rs = {p.stem: json.loads(p.read_text(encoding="utf-8")) for p in run_dir.glob("[A-E]*.json")}

@@ -1,6 +1,5 @@
 import os
 from dataclasses import dataclass
-from typing import Self
 
 
 @dataclass(frozen=True)
@@ -11,7 +10,7 @@ class Settings:
     max_concurrency: int = 8
 
     @classmethod
-    def from_env(cls) -> Self:
+    def from_env(cls):
         keys = tuple(k.strip() for k in os.environ.get("PHARMA_API_KEY", "").split(",") if k.strip())
         return cls(api_keys=keys,
                    ask_timeout_s=float(os.environ.get("PHARMA_ASK_TIMEOUT_S", 60)),

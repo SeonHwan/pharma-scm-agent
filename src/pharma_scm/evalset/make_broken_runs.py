@@ -13,13 +13,11 @@ from collections import defaultdict
 from .. import config
 from .grader import _FINAL, STATUS_LABELS, grade
 from .run_eval import load_questions
-from typing import Any
-from ..typedefs import Question
 
 SEED = 20261103
 
 
-def replace_final(text: str | None, new_line: str) -> str | None:
+def replace_final(text, new_line):
     """마지막 `최종 답:` 줄의 내용을 바꾼다. 줄이 없으면 None."""
     if text is None:
         return None
@@ -30,7 +28,7 @@ def replace_final(text: str | None, new_line: str) -> str | None:
     return text[:m.start(1)] + new_line + text[m.end(1):]
 
 
-def drop_final(text: str | None) -> str | None:
+def drop_final(text):
     if text is None:
         return None
     ms = list(_FINAL.finditer(text))
@@ -39,18 +37,16 @@ def drop_final(text: str | None) -> str | None:
     return (text[:ms[-1].start()] + text[ms[-1].end():]).rstrip()
 
 
-def _fmt(v: int | float) -> str:
+def _fmt(v):
     return f"{v:,}" if isinstance(v, int) else f"{v:.1f}"
 
 
-def mutations(q: Question, r: dict[str, Any],
-              ctx: dict[str, Any]) -> list[tuple[str, str, list[str], bool, bool | None]]:
+def mutations(q, r, ctx):
     """[(변형 이름, 새 답 텍스트, 새 도구 목록, 기대 통과 여부, 기대 tool_exact)] — 적용 불가면 생략."""
     g, kind, ans, tools = q["gold"], q["gold"]["kind"], r["answer"], r["tools_called"]
     rng, out = ctx["rng"], []
 
-    def add(name: str, text: str | None, expect_pass: bool = False,
-            tools_: list[str] | None = None, expect_tool: bool | None = None) -> None:
+    def add(name, text, expect_pass=False, tools_=None, expect_tool=None):
         if text is not None:
             out.append((name, text, tools if tools_ is None else tools_, expect_pass, expect_tool))
 
@@ -90,7 +86,7 @@ def mutations(q: Question, r: dict[str, Any],
     return out
 
 
-def _gold_line(q: Question) -> str:
+def _gold_line(q):
     g = q["gold"]
     k = g["kind"]
     if k == "number":
@@ -104,7 +100,7 @@ def _gold_line(q: Question) -> str:
     return g["value"]
 
 
-def main(run_id: str) -> None:
+def main(run_id):
     qs = {q["id"]: q for q in load_questions()}
     run_dir = config.ROOT / "data" / "runs" / run_id
     runs = {p.stem: json.loads(p.read_text(encoding="utf-8")) for p in run_dir.glob("[A-E]*.json")}

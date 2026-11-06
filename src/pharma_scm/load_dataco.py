@@ -9,26 +9,24 @@ import zipfile
 from datetime import datetime, timedelta
 
 from . import config
-from typing import Any
-import psycopg
 
 ZIP_NAME = "8gx2fvg2k6-5.zip"
 CSV_NAME = "DataCoSupplyChainDataset.csv"
 
 
-def read_rows() -> list[dict[str, str]]:
+def read_rows():
     with zipfile.ZipFile(config.RAW_DIR / ZIP_NAME) as z, z.open(CSV_NAME) as raw:
         text = io.TextIOWrapper(raw, encoding="latin-1", newline="")
         return list(csv.DictReader(text))
 
 
-def sku_map(rows: list[dict[str, str]], skus: list[str]) -> dict[int, str]:
+def sku_map(rows, skus):
     """DataCo Product Card Id를 오름차순으로 세워 SKU에 순환 배정한다."""
     pids = sorted({int(r["Product Card Id"]) for r in rows})
     return {pid: skus[i % len(skus)] for i, pid in enumerate(pids)}
 
 
-def sales_rows(rows: list[dict[str, str]], mapping: dict[int, str]) -> list[tuple[Any, ...]]:
+def sales_rows(rows, mapping):
     shift = timedelta(days=config.DATE_SHIFT_DAYS)
     out = []
     for r in rows:
@@ -50,7 +48,7 @@ def sales_rows(rows: list[dict[str, str]], mapping: dict[int, str]) -> list[tupl
     return out
 
 
-def load(conn: psycopg.Connection, rows_out: list[tuple[Any, ...]]) -> None:
+def load(conn, rows_out):
     with conn.cursor() as cur, cur.copy(
         "COPY sales_orders (order_item_id, order_id, sku, order_date, quantity, "
         "days_shipping_real, days_shipping_scheduled, late_delivery, delivery_status, "

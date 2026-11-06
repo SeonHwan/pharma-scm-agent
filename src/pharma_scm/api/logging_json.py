@@ -12,7 +12,7 @@ _RESERVED = set(logging.LogRecord("", 0, "", 0, "", (), None).__dict__) | {"mess
 
 
 class JsonFormatter(logging.Formatter):
-    def format(self, record: logging.LogRecord) -> str:
+    def format(self, record):
         out = {"ts": datetime.fromtimestamp(record.created, timezone.utc).isoformat(timespec="milliseconds"),
                "level": record.levelname, "logger": record.name, "msg": record.getMessage(),
                "request_id": request_id_var.get()}
@@ -22,7 +22,7 @@ class JsonFormatter(logging.Formatter):
         return json.dumps(out, ensure_ascii=False, default=str)
 
 
-def setup_logging(level: int = logging.INFO) -> logging.Logger:
+def setup_logging(level=logging.INFO):
     handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(JsonFormatter())
     handler._pharma_json = True
