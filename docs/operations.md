@@ -46,11 +46,11 @@ curl -s localhost:8000/ask -H "X-API-Key: $PHARMA_API_KEY" -H "Content-Type: app
 - `test_api.py`: 인증, 요청 ID, 검증 오류 형식, 타임아웃, loop_limit, 빈 답, 모델 서비스 오류 매핑, 내부 오류 비노출, rate limit, 로그 내용(질문·키 비노출). LLM은 주입한 가짜 함수.
 - `test_graph.py`: 가짜 모델로 그래프 흐름, 거부된 SQL이 모델에 전달되는지, 루프 상한, 단계별 시간 콜백.
 - `test_sql_guard.py`(22개), `test_tools.py`(8개), `test_grader.py`(9개), `test_ratelimit.py`(2개).
-- CI(`.github/workflows/ci.yml`): ruff, pytest, docker build. **파일만 작성했고 실행한 적 없다.** CI에는 원본 데이터와 Postgres가 없어 DB 테스트는 건너뛴다.
+- CI(`.github/workflows/ci.yml`): ruff, pytest, docker build. **GitHub Actions에서 실행해 통과를 확인했다**(2026-11-06 push: ruff 통과, pytest 65 passed·8 skipped, docker build 성공). CI에는 원본 데이터와 Postgres가 없어 DB 테스트 8개는 건너뛰므로, 그 부분은 CI가 검증하지 않고 로컬(DB를 띄운 상태)에서만 확인된다.
 
 ## 한 것 / 안 한 것 / 한계
 - **한 것**: 위 장치 전부를 구현했고 로컬에서 테스트와 서버·컨테이너 실행(`/health`, `/ready`, 401)으로 확인했다.
-- **안 한 것**: 실제 모델로 `/ask` 전 구간 호출(비용 없는 단계라 가짜로만 시험), Prometheus 같은 **메트릭 엔드포인트**(지금은 로그의 `duration_ms`·`tokens`·`stages`로만 간접 파악), TLS, 부하 시험, CI 실제 실행, 모델 호출 재시도 동작 자체의 테스트.
+- **안 한 것**: 실제 모델로 `/ask` 전 구간 호출(비용 없는 단계라 가짜로만 시험), Prometheus 같은 **메트릭 엔드포인트**(지금은 로그의 `duration_ms`·`tokens`·`stages`로만 간접 파악), TLS, 부하 시험, 모델 호출 재시도 동작 자체의 테스트.
 - **한계**:
   - 타임아웃이 나도 **작업 스레드는 취소되지 않고** 모델 호출이 끝날 때까지 계속 돈다(응답만 504). 자원과 비용이 새는 구조다.
   - rate limit은 **프로세스 메모리**에만 있다. 서버를 여러 대·여러 워커로 띄우면 한도가 그만큼 늘어난다.
