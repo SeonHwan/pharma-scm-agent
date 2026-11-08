@@ -10,3 +10,9 @@ __pycache__/
 # P5 배포: 비밀은 커밋하지 않는다(DB 덤프 deploy/pharma.sql.gz는 공개 가능한 변환·합성 데이터라 커밋한다)
 deploy/deploy.env
 *.pem
+
+# Terraform: 상태 파일에 개인키가 들어간다
+deploy/terraform/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
