@@ -17,4 +17,5 @@ deploy/terraform/.terraform/
 *.tfstate.*
 *.tfvars
 
-*.DS_Store
+# macOS
+.DS_Store

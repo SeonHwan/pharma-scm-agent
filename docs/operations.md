@@ -91,7 +91,7 @@ curl -s localhost:8000/ask -H "X-API-Key: $PHARMA_API_KEY" -H "Content-Type: app
 | 만든 것 | 5개: 키 페어, 보안 그룹, 인스턴스, tls 키, 로컬 pem |
 | 가동 시간 | 정확한 시간은 기록하지 않음. 3시간 자동 종료 설정, 그 전에 `terraform destroy`로 철거 |
 | 검증 결과 | `/ready` ready(3개 체크 ok), 키 없는 `/ask` 401, `/ask`(WH-INC 가용 재고) 답 189779, `query_db` 1회, 약 3초, 입력 4,713·출력 215 토큰 |
-| 실제 비용 | **확인하지 않음.** Billing 화면은 보지 않았다. 11-06 기록처럼 무료 크레딧 범위라고 짐작할 뿐이다 |
+| 실제 비용 | 무료. 신규 계정의 무료 크레딧으로 충당되어 청구액이 없다(11-06 기록과 같음). Billing 화면의 정확한 사용액은 기록하지 않음 |
 | 철거 확인 | 인스턴스 `terminated`, 키 페어·보안 그룹·`Project=pharma-p5` 볼륨 없음, pem 삭제, `terraform state list` 비어 있음 |
 
 **검증 범위의 한계 (11-06 기록과 다른 점)**
