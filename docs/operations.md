@@ -63,7 +63,7 @@ curl -s localhost:8000/ask -H "X-API-Key: $PHARMA_API_KEY" -H "Content-Type: app
   - 컨테이너 헬스체크의 최종 `healthy` 상태는 확인하지 못했다(점검 시점에 `starting`).
 
 ## P5 AWS 배포 기록 (2026-11-06)
-절차는 `docs/deploy_p5.md`, 자동화는 `deploy/aws_up.sh`·`server_up.sh`·`aws_down.sh`. 임시 배포 후 철거했다(상시 운영 아님).
+절차는 `docs/deploy_p5.md`, 자동화는 `deploy/aws_up.sh`·`server_up.sh`·`aws_down.sh`. 임시 배포 후 철거했다(상시 운영 아님). Terraform으로 다시 한 기록은 아래 "P5 Terraform 재배포 기록"에 있다.
 
 | 항목 | 기록 |
 |---|---|
@@ -81,3 +81,22 @@ curl -s localhost:8000/ask -H "X-API-Key: $PHARMA_API_KEY" -H "Content-Type: app
 - `/ask` 검증은 외부에서 8000번 직접 호출이 아니라 **SSH 터널(`-L 18000:localhost:8000`)** 로 했다. 따라서 "외부에서 직접 호출 검증"이 아니라 "터널 경유 검증"이다. 보안 그룹의 IP 제한 동작(다른 네트워크에서 차단)도 확인하지 않았다.
 - `server_up.sh`는 `restore_db.sh`가 stdin을 소비해 이후 명령이 실행되지 않는 문제가 있어 `</dev/null`로 고쳤다. API 기동은 그 고치기 전에 수동으로 실행했다.
 - HTTPS·상시 운영·고가용성·도메인 연결은 하지 않았다.
+
+## P5 Terraform 재배포 기록 (2026-11-09)
+같은 구성을 `deploy/terraform/`(Terraform)으로 만들어 검증하고 철거했다. 구성·사용법은 `deploy/terraform/README.md`, 위 2026-11-06 기록(스크립트 버전)과 같은 `deploy/server_up.sh`를 썼다. 임시 배포였고 상시 운영이 아니다.
+
+| 항목 | 기록 |
+|---|---|
+| 날짜·리전·타입 | 2026-11-09, ap-northeast-2, `t4g.small`(arm64, Amazon Linux 2023), EBS gp3 16GB, IMDSv2 강제 |
+| 만든 것 | 5개: 키 페어, 보안 그룹, 인스턴스, tls 키, 로컬 pem |
+| 가동 시간 | 정확한 시간은 기록하지 않음. 3시간 자동 종료 설정, 그 전에 `terraform destroy`로 철거 |
+| 검증 결과 | `/ready` ready(3개 체크 ok), 키 없는 `/ask` 401, `/ask`(WH-INC 가용 재고) 답 189779, `query_db` 1회, 약 3초, 입력 4,713·출력 215 토큰 |
+| 실제 비용 | **확인하지 않음.** Billing 화면은 보지 않았다. 11-06 기록처럼 무료 크레딧 범위라고 짐작할 뿐이다 |
+| 철거 확인 | 인스턴스 `terminated`, 키 페어·보안 그룹·`Project=pharma-p5` 볼륨 없음, pem 삭제, `terraform state list` 비어 있음 |
+
+**검증 범위의 한계 (11-06 기록과 다른 점)**
+- `/ask`는 SSH 터널이 아니라 **공인 IP의 8000번 직접 호출**(`http://<IP>:8000/ask`, `X-API-Key` 헤더)로 했다. 호출한 곳은 `/32`로 허용한 같은 PC다. 11-06에 터널을 쓴 이유였던 핫스팟 문제는 이번에는 나타나지 않았다.
+- `/32` 제한이 **허용되지 않은 IP에서 차단되는지는 확인하지 않았다.** 허용 IP에서 호출이 통과한 것과 키 없는 호출이 401인 것(앱 계층 인증)만 확인했다. 401은 보안 그룹이 아니라 앱이 돌려준 응답이다.
+- `terraform plan`에서 보안 그룹 규칙이 22·8000번 모두 `/32` 하나뿐인 것은 확인했다. 22번을 `0.0.0.0/0`으로 연 일은 이번에는 없었다.
+- 인스턴스는 `apply`로 만들었고, 이전 스크립트로 만든 리소스와는 겹치지 않았다.
+

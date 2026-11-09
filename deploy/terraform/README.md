@@ -34,3 +34,6 @@ terraform -chdir=deploy/terraform destroy -var allowed_cidr=1.2.3.4/32
 - `plan`부터는 유효한 AWS 자격 증명이 필요하다. `~/.aws`에 프로필이 여러 개면 `AWS_PROFILE=<프로필>`을 지정한다.
 - `server_up.sh` 전에 `deploy/deploy.env.example`을 복사해 `deploy/deploy.env`를 직접 만들어야 한다.
 - `.terraform.lock.hcl`은 provider 버전 고정용이라 커밋한다.
+
+운영 기록(검증 범위의 한계, 비용 칸 포함)은 `docs/operations.md`의 "P5 Terraform 재배포 기록"에 있다. 같은 `/ask` 검증이 터널이 아닌 8000번 직접 호출이었고, `/32` 차단 동작은 확인하지 못했다는 점도 거기에 적었다. 스크립트 버전의 기록은 같은 파일의 "P5 AWS 배포 기록"이다.
+
