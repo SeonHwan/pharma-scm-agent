@@ -1,58 +1,41 @@
-# CI 평가 게이트: 새 세션 인계 (2026-11-11 작성, 브랜치 `learn/ci-cd`)
+# CI 평가 게이트: 인계 (2026-11-12 갱신, `master`)
 
-설계와 과제 1~6 전체는 `docs/ci_eval_gate_plan.md`에 있다. 이 문서는 **그 뒤의 진행 상태와, 세션에서 합의한 작업 방식**만 적는다. 두 문서를 같이 읽는다.
+설계 배경과 과제 1~6 전체는 `docs/ci_eval_gate_plan.md`에 있다(설계 기록으로만 읽는다). 운영은 `docs/ci_operations.md`, 게이트 규칙·임계치는 `docs/eval_protocol.md`의 "CI 게이트" 절. 이 문서는 **진행 상태와, 세션에서 합의한 작업 방식**만 적는다.
 
-## 진행 상태
-| 과제 | 상태 | 근거 |
+## 진행 상태: 과제 1~6 모두 완료
+| 과제 | 결과 | 근거 |
 |---|---|---|
-| 1. CI에 Postgres 서비스 + 덤프 복원 | **완료** | 커밋 `768df7a` push됨. Actions 실행 `42957186575`에서 `36 passed`, skip 0 확인 |
-| 2. `gold_sql` ↔ `gold` 일치 테스트 | 미착수 (이번 묶음) | |
-| 3. 문항 md5·프롬프트 해시 등록값 비교 | 미착수 (이번 묶음) | |
-| 4~6 | 미착수 | 4·6은 LLM 호출이라 비용 계산 후 승인 필요 |
+| 1. CI에 Postgres 서비스 + 덤프 복원 | 완료 | `scripts/ci_restore_db.sh`, `ci.yml`. Actions에서 skip 0 확인 |
+| 2. `gold_sql` ↔ `gold` 일치 테스트 | 완료 | `tests/test_evalset_gold.py`(A 44개) |
+| 3. 문항 md5·프롬프트 해시 등록값 비교 | 완료 | `eval/registered.json`, `tests/test_eval_registration.py` |
+| 4. repeat-variance 측정 | 완료 | 30문항×5회 150건 전부 통과. `docs/eval_repeat_variance.md`(사전 등록), `..._results.md`(결과) |
+| 5. `run_eval` 확장, `report --json`, `gate.py`, `baseline.json` | 완료 | `evalset/gate.py`, `eval/baseline.json`, `tests/test_gate.py` |
+| 6. 스모크·전체 평가 워크플로 | 완료 | `eval-smoke.yml`(PR #1에서 6문항 PASS·게이트 통과), `eval-full.yml`(실행 `43171436991`: 114문항 112/114) |
 
-진행 묶음: 사용자가 **2·3을 한 묶음**으로 진행하기로 했다. 순서는 2 → 3.
+PR #1(머지 `fd930ea`)과 PR #2(문서, `43c2416`)가 `master`에 들어갔다. 현재 `master`의 pytest는 **111개**이고 skip 0이다(DB가 켜져 있을 때).
+**미검증으로 남은 것**: 게이트가 Actions에서 job을 실제로 실패시키는 경로(단위 테스트만), fork PR 스킵, 웹의 "Run workflow" 버튼 화면. 한계: 무료 플랜 비공개 저장소라 branch protection을 쓸 수 없다(`docs/ci_operations.md`).
 
-과제 1 산출물: `.github/workflows/ci.yml`(test job의 `services: postgres`, `ci_restore_db.sh` 스텝), `scripts/ci_restore_db.sh`, `docs/ci_task1_verify.md`(개인 PC 검증 절차와 결과).
-`docs/ci_task1_verify.md`의 "검증 결과" 갱신은 이 인계 시점에 **커밋되지 않은 변경**일 수 있다. `git status`로 확인한다.
+## 이어서 할 일
+`~/server-tutorial`(이 저장소 밖, git 아님)의 **6단계(비밀·설정)**. 문서 `step06_secrets.md`는 작성되어 있고(CLI·Terraform 경로 A와 AWS 콘솔 경로 B), 모든 AWS 명령은 **맥북에서 처음 실행하는 미검증 초안**이다. 이 PC에서는 AWS를 못 쓴다.
+- 사용자가 맥북에서 콘솔로 1~2단계(파라미터·역할 만들기)를 해 본 뒤, 막히는 곳이나 질문을 가져온다.
+- 그 뒤 승인받아 이 저장소에 `deploy/terraform/iam.tf` 초안과 서버에서 비밀을 읽어 오는 스크립트를 만든다(문서에는 "별도 작업"으로 적혀 있다).
+- 튜토리얼의 작업 규칙 원본은 `~/server-tutorial/CLAUDE.md`다(새 세션이 이 저장소에서 열리면 자동으로 읽히지 않으니 직접 읽는다).
 
 ## 작업 방식 (사용자와 합의, 반드시 지킬 것)
-- **파일 하나씩 단계를 밟는다.** 한 번에 여러 파일을 만들어 놓고 설명하지 않는다. 파일마다 "무엇을, 왜, 어떻게"를 설명하고 확인받은 뒤 다음 파일로 간다. (사용자가 과제 1에서 이 점을 지적했다.)
-- **용어를 구분해서 정확히 쓴다.** 뭉뚱그리지 않는다.
-  - 이미지(설계도) / 컨테이너(실행 중인 환경) / 호스트(컨테이너를 돌리는 머신: 로컬은 이 PC, CI는 GitHub 러너)
-  - "서비스"는 두 가지다: **Compose 서비스**(`compose.yaml`의 `db`)와 **Actions 서비스 컨테이너**(`ci.yml`의 `services:`). 서로 다른 도구다.
-  - 로컬 DB는 Compose 서비스 `db`의 컨테이너(`pharma-scm-agent-db-1`), CI의 DB는 job마다 새로 생기고 사라지는 별개의 컨테이너다.
-- 설명은 파일 위→아래가 아니라 **실행되는 시간 순서(평가 절차: 재료 고정→실행→채점→집계→판정→보관→연결)** 로 한다. 사용자는 Unity/C# 개발자이고 서버·CI가 처음이다. Unity 비유는 도움이 됐다.
-- 질문이 나오면 "개념이 없어서"로 단정하지 않는다. 사용자는 보통 설명에서 빠진 연결을 정확히 짚는다.
+- **`master`에서 바로 작업한다.** CI 학습용 브랜치 `learn/ci-cd`는 머지로 끝났다(사용자 합의 2026-11-12: 혼자 쓰는 저장소이고 branch protection도 못 쓰니 문서·코드 변경에 PR을 요구하지 않는다). PR은 `eval-smoke`처럼 PR 이벤트를 검증해야 할 때만 쓴다.
+- **파일 하나씩 단계를 밟는다.** 한 번에 여러 파일을 만들어 놓고 설명하지 않는다. 파일마다 "무엇을, 왜, 어떻게"를 설명하고 확인받은 뒤 다음으로 간다.
+- **용어를 구분해서 정확히 쓴다.** 이미지(설계도) / 컨테이너(실행 중인 환경) / 호스트(컨테이너를 돌리는 머신: 로컬은 이 PC, CI는 GitHub 러너). "서비스"는 두 가지다: Compose 서비스(`compose.yaml`의 `db`)와 Actions 서비스 컨테이너(`ci.yml`의 `services:`). 로컬 DB와 CI의 DB는 별개의 컨테이너다.
+- 설명은 파일 위→아래가 아니라 **실행되는 시간 순서**로 한다. 사용자는 Unity/C# 개발자이고 서버·CI·AWS가 처음이다. Unity 비유가 도움이 됐다. 질문이 나오면 "개념이 없어서"로 단정하지 않는다. 사용자는 보통 설명에서 빠진 연결을 정확히 짚는다.
 - 커밋·push는 **사용자가 요청할 때만**. 작업 단위가 끝나면 "커밋할까요"를 묻는다. 파일을 **지정해서** add한다(`git add -A` 금지).
 - `data/raw/openfda_shortages_2026-11-02_0.json`, `..._1000.json`, `openfda_result.txt`의 변경은 의도적으로 커밋하지 않는 것이다. 건드리지 않는다.
-- 검증하지 않은 것은 "미검증"이라고 적는다. 검증했으면 어떻게 했는지 말한다.
-- LLM을 실제로 호출하는 작업(과제 4, 6)은 호출 수·토큰·비용을 먼저 계산해 보여주고 승인받는다.
+- 검증하지 않은 것은 "미검증"이라고 적는다. 검증했으면 어떻게 했는지 말한다. 사용자가 보는 화면(AWS 콘솔 등)은 직접 볼 수 없으니 메뉴 이름은 "알고 있는 기준"이라고 밝힌다.
+- **LLM·AWS 비용이 드는 작업은 호출 수·토큰·비용을 먼저 계산해 보여 주고 승인받는다.** 비용 자원은 끝나면 철거하고 철거 확인 방법을 적는다.
 - 대명사를 모르면 they/them. 타입 힌트 없음(저장소 스타일), 주석은 한국어, 기존 밀도에 맞춘다.
 
 ## 이 환경에서 확인된 사실
-- **`gh` CLI가 설치되어 있고 로그인되어 있다**(계정 SeonHwan). Actions 결과를 직접 볼 수 있다: `gh run list --branch learn/ci-cd`, `gh run view <id> --log`. `git push`도 이 PC에서 인증서 오류 없이 된다. 저장소는 `https://github.com/SeonHwan/pharma-scm-agent`.
-- 이 PC에는 호스트용 `psql`이 **없다**. psql이 필요한 스크립트는 `docker run --rm --network host -v "$PWD":/w -w /w postgres:17 bash ...`로 돌린다.
-- 로컬 DB는 어제까지 꺼져 있다가 다시 올렸다. 새 세션에서 `docker ps`로 `pharma-scm-agent-db-1`이 떠 있는지 확인하고, 없으면 `docker compose up -d db`. 없는 채로 `uv run pytest`를 돌리면 `32 passed, 4 skipped`가 나온다(DB 테스트 skip).
-- 일부 MCP 서버는 `SELF_SIGNED_CERT_IN_CHAIN`으로 연결에 실패한다. 사내 TLS 가로채기 환경으로 보이며, **Anthropic API 호출이 이 PC에서 되는지는 아직 확인하지 않았다.** 과제 4 전에 최소 호출로 확인한다. 안 되면 개인 PC에서 한다(개인 PC로 옮길 때는 git 밖의 `data/runs/main_v1/`와 API 키가 필요하다. 과제 5의 `baseline.json` 재집계에 `main_v1`이 쓰인다).
-- 현재 CI 테스트는 36개이고 모두 통과한다. 새 테스트를 넣으면 36보다 늘어난다.
-- `uv run pytest -q`, `uv run ruff check .`가 로컬 검증 명령이다.
-
-## 다음 작업: 과제 2 (이어서 3)
-
-### 과제 2: `tests/test_evalset_gold.py`
-- A 유형 문항의 `gold_sql`을 **읽기 전용 계정(`config.RO_DSN`)** 으로 실행해 결과가 `gold.value`와 같은지 확인. 정수는 정확히, 소수는 채점기와 같은 ±0.05 규칙이므로 `src/pharma_scm/evalset/grader.py`의 `_num_ok(got, gold)`를 재사용한다(`isinstance(gold, int)`면 `==`, 아니면 `abs(got-gold) <= DECIMAL_TOL`).
-- `needs_db` 픽스처(`tests/conftest.py`) 사용. 문항은 `eval/questions.jsonl`에서 읽는다(한 줄 = JSON 하나: `id, type, question, expected_tools, gold{kind,value}, gold_sql`).
-- **먼저 확인할 것:** 계획서는 "`gold_sql`은 A 44개에만 있다"고 적었는데 `docs/eval_protocol.md`는 "A·D의 `gold_sql`"이라고 적었다. 실제로 `gold_sql` 필드가 있는 문항을 세어 어느 쪽이 맞는지 확인하고, 있는 문항 전체를 대상으로 한다. 값이 불일치하는 문항이 나오면 **테스트를 고치지 말고 사용자에게 보고**한다(정답표 오류일 수 있다).
-- 예시 SQL(A001): `SELECT coalesce(sum(quantity),0) FROM inventory_lots WHERE warehouse='WH-INC' AND lot_status='available' AND expiry_date >= DATE '2026-11-01'`, 기대값 189779.
-- 결과가 `Decimal`로 올 수 있으니 비교 전 숫자 타입을 확인한다.
-- 완료 기준: 로컬(DB 켠 상태)과 CI 모두에서 통과, DB 없으면 skip.
-
-### 과제 3: 등록값 비교
-- `eval/registered.json` = `{"questions_md5": "e96780f475db1108c1e3a4eb35a2fe67", "prompt_version": "v1", "prompt_sha": "b92313567d93"}`.
-- `tests/test_eval_registration.py`: 현재 `eval/questions.jsonl`의 md5, `agent/prompt.py`의 `PROMPT_VERSION`, `PROMPT_SHA`를 등록값과 비교. 다르면 실패하고 메시지에 "의도한 변경이면 버전을 올리고 registered.json과 baseline을 PR로 갱신"을 안내한다.
-- **등록 전에 현재 값을 직접 계산해서 확인한다.** 이 세션에서 `md5sum eval/questions.jsonl` = `e96780f475db1108c1e3a4eb35a2fe67`(일치)을 확인했다. `PROMPT_SHA`(`b92313567d93`)는 아직 확인하지 않았다. `PROMPT_SHA`는 `agent/prompt.py` 끝에서 `SYSTEM_PROMPT`의 sha256 앞 12자리로 계산된다.
-- 이 테스트는 DB가 필요 없다. 파일 읽기만 한다.
-
-## 이후 순서 (계획서 기준)
-2 → 3 → 5의 코드 부분(`--ids`, `report --json`, `gate.py` + 단위 테스트) → 4(승인 후 측정) → 임계치 확정·`baseline.json` → 6.
-완료 후 갱신: `docs/eval_protocol.md`, `HANDOFF.md`(한 줄), `~/server-tutorial/step05_ci_eval_gate.md`(갱신 여부는 사용자에게 묻는다).
+- **`gh`가 설치·로그인(SeonHwan)되어 있다.** `gh run list --branch master`, `gh run view <id> --log`, `gh run download <id> -n <artifact> -D <새 폴더>`, `gh workflow run eval-full.yml --ref master -f approve_cost=true`가 동작한다. `git push`도 된다. 이 PC에서 **Anthropic API 호출도 된다**(2026-11-12 확인).
+- 이 PC에는 호스트용 `psql`이 **없다**. 필요하면 `docker run --rm --network host -v "$PWD":/w -w /w postgres:17 bash ...`.
+- **로컬 DB 컨테이너(`pharma-scm-agent-db-1`)가 자주 꺼져 있다**(세션 중 두 번 확인됨, 원인 미확인). 꺼져 있으면 DB 테스트가 실패가 아니라 skip되어 `passed`만 보면 놓친다. `docker ps`로 확인하고 `docker compose up -d db`. 로컬 검증은 `uv run pytest -q`와 `uv run ruff check .`.
+- 일부 MCP 서버는 `SELF_SIGNED_CERT_IN_CHAIN`으로 연결에 실패한다(사내 TLS 가로채기로 보임). AWS 호출도 이 PC에서는 안 되는 것으로 기록되어 있다.
+- 2026-11-12에 작업 트리의 `deploy/*.sh`, `scripts/ci_restore_db.sh` 6개가 CRLF로 바뀌고 실행 권한이 빠진 적이 있다(Claude가 한 일이 아님, `git restore`로 복구함). 다시 보이면 `git diff --summary`와 `grep -c $'\r'`로 확인한다.
+- 비용 규모(실측): 스모크 6문항은 호출 약 10회·입력 약 2.5만 토큰, 전체 114문항은 호출 225회·입력 약 58.7만 토큰.
