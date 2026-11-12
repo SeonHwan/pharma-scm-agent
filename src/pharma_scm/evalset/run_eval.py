@@ -3,11 +3,16 @@
 이미 결과 파일이 있는 문항은 건너뛴다(중단 후 이어서 실행). 결과를 보고 프롬프트를 바꾸면
 PROMPT_VERSION을 올리고 새 run_id로 돌린다 — 기존 결과를 덮어쓰지 않는다.
 실행: uv run python -m pharma_scm.evalset.run_eval [--dry-run] [--run-id ID] [--workers N]
+      [--ids A001,B002 ...] [--sha 커밋해시] [--strict]
+--ids로 일부 문항만, --sha로 run_id에 커밋 해시를 넣어 옛 결과 재사용을 막는다(기본 run_id는 main_<버전>).
+--strict는 실행 중 예외로 실패한 문항이 있으면 종료코드 1로 끝낸다(스모크·CI용). 기본은 항상 0.
 """
 
 import argparse
 import hashlib
 import json
+import re
+import sys
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 
@@ -23,6 +28,33 @@ RESULT_CLIP = 2000
 
 def load_questions():
     return [json.loads(x) for x in QUESTIONS.read_text(encoding="utf-8").splitlines()]
+
+
+def parse_ids(text):
+    """쉼표·공백으로 구분된 문항 ID 목록(파일 내용을 그대로 넘겨도 된다). 중복은 첫 번째만 남긴다."""
+    return list(dict.fromkeys(x for x in re.split(r"[,\s]+", text) if x))
+
+
+def select_questions(qs, ids):
+    if ids is None:
+        return qs
+    known = {q["id"] for q in qs}
+    unknown = [i for i in ids if i not in known]
+    if unknown:
+        raise ValueError(f"평가셋에 없는 문항 ID: {', '.join(unknown)}")
+    want = set(ids)
+    return [q for q in qs if q["id"] in want]
+
+
+def default_run_id(sha):
+    return f"main_{PROMPT_VERSION}_{sha[:8]}" if sha else f"main_{PROMPT_VERSION}"
+
+
+def count_problems(results):
+    """이번에 실행한 결과에서 (실행 오류 문항 수, 형식 위반 문항 수). 오류 문항은 형식 위반에서 뺀다."""
+    errors = sum(1 for r in results if r["error"])
+    fmt_bad = sum(1 for r in results if not r["error"] and not r["grade"]["format_ok"])
+    return errors, fmt_bad
 
 
 def run_one(q, graph, out_dir):
@@ -42,13 +74,20 @@ def run_one(q, graph, out_dir):
     return r
 
 
-def main():
+def main(argv=None):
     ap = argparse.ArgumentParser()
-    ap.add_argument("--run-id", default=f"main_{PROMPT_VERSION}")
+    ap.add_argument("--run-id", default=None, help="기본: main_<프롬프트 버전>[_<--sha 앞 8자>]")
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--dry-run", action="store_true")
-    a = ap.parse_args()
-    qs = load_questions()
+    ap.add_argument("--ids", default=None, help="실행할 문항 ID(쉼표·공백 구분). 없으면 전체")
+    ap.add_argument("--sha", default=None, help="run_id에 넣을 커밋 해시")
+    ap.add_argument("--strict", action="store_true", help="실행 오류 문항이 있으면 종료코드 1")
+    a = ap.parse_args(argv)
+    a.run_id = a.run_id or default_run_id(a.sha)
+    try:
+        qs = select_questions(load_questions(), None if a.ids is None else parse_ids(a.ids))
+    except ValueError as e:
+        ap.error(str(e))
     out_dir = config.ROOT / "data" / "runs" / a.run_id
     todo = [q for q in qs if not (out_dir / f"{q['id']}.json").exists()]
     print(f"run_id={a.run_id} 프롬프트 {PROMPT_VERSION} {PROMPT_SHA} 모델 {config.AGENT_MODEL}")
@@ -67,12 +106,18 @@ def main():
             "questions_md5": hashlib.md5(QUESTIONS.read_bytes()).hexdigest()}, indent=1))
     graph = build_graph()
     done = 0
+    results = []
     with ThreadPoolExecutor(a.workers) as ex:
         for r in ex.map(lambda q: run_one(q, graph, out_dir), todo):
             done += 1
+            results.append(r)
             g = r["grade"]
             print(f"[{done}/{len(todo)}] {r['id']} {'PASS' if g['pass'] else 'FAIL'} "
                   f"{g['reason'][:60]} {r['error'] or ''}", flush=True)
+    errors, fmt_bad = count_problems(results)
+    print(f"이번 실행 {len(results)}개: 실행 오류 {errors}건, 형식 위반 {fmt_bad}건")
+    if a.strict and errors:
+        sys.exit(1)
 
 
 if __name__ == "__main__":
