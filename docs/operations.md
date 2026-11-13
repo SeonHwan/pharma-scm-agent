@@ -100,3 +100,29 @@ curl -s localhost:8000/ask -H "X-API-Key: $PHARMA_API_KEY" -H "Content-Type: app
 - `terraform plan`에서 보안 그룹 규칙이 22·8000번 모두 `/32` 하나뿐인 것은 확인했다. 22번을 `0.0.0.0/0`으로 연 일은 이번에는 없었다.
 - 인스턴스는 `apply`로 만들었고, 이전 스크립트로 만든 리소스와는 겹치지 않았다.
 
+
+## P6 비밀을 SSM에서 읽는 재배포 기록 (2026-11-13)
+서버에 `deploy.env`를 복사하지 않고, 서버가 자기 IAM 역할로 SSM Parameter Store의 비밀을 읽도록 바꿔 배포했다. 서버는 `deploy/terraform/`으로 만들고 `deploy/server_up.sh`로 올렸고, **파라미터와 IAM 역할은 학습 목적으로 AWS 콘솔에서 만들고 붙였다**(절차는 `deploy/terraform/README.md` 맨 아래). 임시 배포였고 상시 운영이 아니다. 아래 결과는 **사용자가 맥북에서 실행해 이 세션에 붙여 준 출력**이며 이 PC에서 직접 돌린 것이 아니다.
+
+| 항목 | 기록 |
+|---|---|
+| 날짜·리전·타입 | 2026-11-13, ap-northeast-2, `t4g.small`(Amazon Linux 2023, arm64), IMDSv2 강제 |
+| 바뀐 것 | `server_up.sh`가 `deploy.env`를 scp하지 않고 서버의 `deploy/fetch_secrets.sh`를 실행. 이 스크립트가 `/pharma/api_key`·`/pharma/anthropic_api_key`를 SSM에서 읽고, DB 비밀번호 3개는 서버에서 새로 생성 |
+| 만든 것 | Terraform: 키 페어·보안 그룹·인스턴스·tls 키·pem 5개. 콘솔: SSM `SecureString` 파라미터 2개, IAM 역할 `pharma-p5-ec2`(인라인 정책이 `ssm:GetParameter(s)`를 `parameter/pharma/*`에만 허용), 인스턴스에 역할 부착 |
+| 확인한 것(사용자 출력) | 서버 안에서 `aws ssm get-parameter --name /other/x`가 `AccessDeniedException`(assumed-role `pharma-p5-ec2`, "no identity-based policy allows"). 서버에 `aws` CLI가 이미 있음. 키 교체 후 `/ask`(How many products)가 `query_db`를 거쳐 **90** 반환(호출 2회, 입력 4,638·출력 122 토큰, 2.1초). 키 없는 `/ask` 401 검증은 이 기록에서 별도로 보고되지 않음 |
+| 철거 | 사용자가 "철거 완료"라고 보고했다. `terraform destroy`, SSM 파라미터 2개·IAM 역할 삭제, Anthropic 배포 전용 키 삭제를 안내했으나 **각 항목의 확인 출력(`describe-instances`, 인스턴스 프로파일 잔존 여부 등)은 받지 못했다** |
+| 실제 비용 | 정확한 사용액은 기록하지 않음(신규 계정 무료 크레딧 범위로 보이나 확인하지 않음) |
+
+**겪은 문제와 원인**
+- **IAM 역할 생성 거부**: SSO 권한 세트 `PowerUserAccess`에는 IAM 작업이 없다. IAM Identity Center에서 `AdministratorAccess` 권한 세트를 추가해 콘솔에서만 쓰고, 터미널(`terraform`, CLI)은 `PowerUserAccess` 프로필로 썼다.
+- **`terraform plan`이 `InvalidClientTokenId`로 실패(2회)**: `AWS_PROFILE`이 걸리지 않은 창에서 `~/.aws/credentials`의 `[default]` 옛 액세스 키가 쓰였다. 파일을 `credentials.bak`으로 옮기고 `AWS_PROFILE`을 지정해 해결했다. 철거할 때는 새 터미널에서 같은 에러가 다시 나 `AWS_PROFILE`을 다시 지정했다(원인은 사용자 환경 설명에 근거한 추정).
+- **`/ask`가 `요청 형식 오류`(422)**: `curl` 명령의 줄바꿈 `\` 때문에 본문이 서버에 가지 않았다. 한 줄로 쓰자 해결됐다(서버 코드 `app.py`가 필드 이름 없는 422를 내는 것을 읽고 본문 누락으로 추정, 사용자가 줄바꿈 문제였다고 확인).
+- **`/ask`가 `upstream_error`**: 서버 로그에 `AnthropicAuthenticationError`가 계속 찍혔다. SSM에 저장된 Anthropic 키 값이 유효하지 않았던 것이다(정확한 원인은 붙여넣기 오류 등으로 **확인하지 못함**). 콘솔에서 값을 덮어쓰고, 서버에서 `deploy.env`의 `ANTHROPIC_API_KEY` 한 줄만 `sed`로 바꿔 `api` 컨테이너를 재생성해 해결했다.
+- **`docker compose logs`가 `DB_ADMIN_PASSWORD` 누락 에러**: `--env-file deploy/deploy.env`를 빼고 실행해서 생긴 것으로, 서버 문제가 아니다.
+
+**한계·미확인**
+- `fetch_secrets.sh`를 서버에서 다시 실행하면 DB 비밀번호 3개가 새로 생성되어, 이미 만들어진 DB와 맞지 않게 된다(키만 바꿀 때는 쓰지 않고 `sed`로 한 줄만 바꿨다). 이미 있는 `deploy.env`의 DB 비밀번호를 유지하도록 고치는 일은 **아직 하지 않았다**.
+- **`kms:Decrypt` 없이 `SecureString`이 읽히는지**: 기본 키(`alias/aws/ssm`)로 읽기가 성공해 추가 권한은 필요 없었던 것으로 보이나, 이를 따로 시험하지는 않았다.
+- 파라미터·역할·부착을 콘솔로 해서 **Terraform에 기록이 없다**. 같은 환경을 코드로 다시 만들려면 `iam.tf`가 필요하며 이전 방식은 커밋 `84bda6f`에 있다.
+- `/32` 방화벽이 허용되지 않은 IP를 차단하는지, HTTPS, 상시 운영(원격 tfstate·CI/CD 배포·모니터링)은 이전 기록과 같이 하지 않았다.
+- 서버 `aws` CLI의 기본 설치는 확인했으나(이번 서버 기준), 이미지(AMI) 버전이 바뀌면 달라질 수 있다.
