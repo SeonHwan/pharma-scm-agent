@@ -78,7 +78,6 @@ resource "aws_instance" "p5" {
   ami                    = data.aws_ssm_parameter.ami.value
   instance_type          = "t4g.small"
   key_name               = aws_key_pair.p5.key_name
-  iam_instance_profile   = aws_iam_instance_profile.p5.name
   vpc_security_group_ids = [aws_security_group.p5.id]
 
   # 서버 안에서 shutdown 하면 중지가 아니라 삭제(user-data.sh가 3시간 뒤 종료를 예약한다)
