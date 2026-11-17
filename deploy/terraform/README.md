@@ -37,9 +37,9 @@ terraform -chdir=deploy/terraform destroy -var allowed_cidr=1.2.3.4/32
 
 운영 기록(검증 범위의 한계, 비용 칸 포함)은 `docs/operations.md`의 "P5 Terraform 재배포 기록"에 있다. 같은 `/ask` 검증이 터널이 아닌 8000번 직접 호출이었고, `/32` 차단 동작은 확인하지 못했다는 점도 거기에 적었다. 스크립트 버전의 기록은 같은 파일의 "P5 AWS 배포 기록"이다.
 
-## 비밀은 SSM에서 읽는다 (6단계, 콘솔로 진행 · 맥북에서 처음 실행 · 미검증)
+## 비밀은 SSM에서 읽는다 (파라미터·역할은 콘솔로 진행, 맥북에서 실행)
 서버는 `deploy.env`를 복사받지 않고, 자기 IAM 역할로 SSM Parameter Store를 읽어 `deploy.env`를 만든다(`deploy/fetch_secrets.sh`). DB 비밀번호는 서버에서 새로 생성한다.
-**파라미터와 역할은 Terraform이 아니라 AWS 콘솔에서 만들고 붙인다**(학습 목적). 따라서 `destroy`가 지워 주지 않으니 철거를 직접 한다. 화면별 절차는 `~/server-tutorial/step06_secrets.md`의 "콘솔 버전" B-1~B-5.
+**파라미터와 역할은 Terraform이 아니라 AWS 콘솔에서 만들고 붙인다**(학습 목적). 따라서 `destroy`가 지워 주지 않으니 철거를 직접 한다.
 
 순서:
 1. 콘솔(서울 리전): Parameter Store에 `/pharma/anthropic_api_key`(배포 전용 새 키), `/pharma/api_key`(`openssl rand -hex 24`로 만든 값)를 `SecureString`으로 만든다.
