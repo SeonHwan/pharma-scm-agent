@@ -66,5 +66,14 @@ aws ec2 describe-network-interfaces --query 'NetworkInterfaces[].Description'
 | 항목 | 값 |
 |---|---|
 | 자원을 켜 둔 총 시간 | 미기록 |
-| Billing에서 확인한 사용액 | 미기록 |
-| 위 추정과의 차이 | 미기록 |
+| Billing에서 확인한 사용액 | 무료 크레딧 $120 중 **$119.85 남음**(사용자 보고, 2026-11-18). 누적 사용 약 $0.15. **이전 사용량을 기억하지 못해 7단계와 11-18 연습만의 비용은 분리하지 못함** |
+| 위 추정과의 차이 | 판단 보류. 아래 주의 참고 |
+
+**주의**: Billing·크레딧 잔액은 사용 후 반영이 늦을 수 있어(일반적으로 알려진 동작, 이번에 확인하지는 않음) 위 $0.15에 마지막 연습이 다 들어갔는지 알 수 없다. 철거 다음 날 Cost Explorer에서 서비스별(RDS, ELB, ECS, VPC의 공인 IPv4) 사용액을 다시 보고 이 칸을 갱신한다.
+
+## 6. 철거 기록 (2026-11-17, 사용자 보고)
+안내한 순서(서비스 → ALB·타깃 그룹 → RDS → ECR → 로그 그룹 → 클러스터 → 보안 그룹)로 철거했다고 보고받았다. 4번의 확인 명령 8줄이 **모두 빈 결과**였다(`ecs list-clusters`, `elbv2 describe-load-balancers`, `rds describe-db-instances`·`describe-db-snapshots`, `ecr describe-repositories`, `logs describe-log-groups`, `ec2 describe-addresses`·`describe-network-interfaces`).
+- 이 명령들에 포함되지 않아 11-17에는 미확인이던 것을 **11-18에 직접 조회로 확인**했다: 타깃 그룹 없음, RDS 자동 백업 보존분 없음. **보안 그룹 `pharma-task-sg`·`pharma-rds-sg`·`pharma-alb-sg` 3개는 남아 있다**(과금 없음, Terraform 전환 전에 정리).
+- 11-18에 로드 밸런싱 연습(`lbtest-*`, ALB·Fargate 1개)을 따로 만들고 철거했다. 켜 둔 시간과 사용액은 미기록(`docs/ecs_deploy_walkthrough.md` §4-N).
+- 남겨 둔 것(과금 없음): SSM 파라미터 7개, IAM 역할 `pharma-ecs-execution`, 6단계 IAM 역할·파라미터.
+- 실제 청구액은 다음 날 Billing(Cost Explorer)에서 서비스별로 확인해 위 표에 적는다.

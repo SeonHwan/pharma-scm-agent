@@ -126,3 +126,24 @@ curl -s localhost:8000/ask -H "X-API-Key: $PHARMA_API_KEY" -H "Content-Type: app
 - 파라미터·역할·부착을 콘솔로 해서 **Terraform에 기록이 없다**. 같은 환경을 코드로 다시 만들려면 `iam.tf`가 필요하며 이전 방식은 커밋 `84bda6f`에 있다.
 - `/32` 방화벽이 허용되지 않은 IP를 차단하는지, HTTPS, 상시 운영(원격 tfstate·CI/CD 배포·모니터링)은 이전 기록과 같이 하지 않았다.
 - 서버 `aws` CLI의 기본 설치는 확인했으나(이번 서버 기준), 이미지(AMI) 버전이 바뀌면 달라질 수 있다.
+
+## P7 ECS Fargate 콘솔 배포 기록 (2026-11-16 ~ 11-17)
+EC2 한 대 방식을 **ECS Fargate + ALB + RDS PostgreSQL**로 바꿔 콘솔로 한 번 만들고 검증한 뒤 철거했다. 임시 배포이고 상시 운영이 아니다. 전체 순서·용어·`/ask` 한 건의 경로·명령 해설·겪은 문제는 `docs/ecs_deploy_walkthrough.md`에, 비용 추정과 철거 순서는 `docs/ecs_cost_and_teardown.md`에 있다. 아래 결과 중 AWS 쪽은 **사용자가 맥북 또는 콘솔에서 실행해 세션에 알려 준 결과**이고, 이 PC에서 직접 돌린 것은 로컬 이미지 기동과 복원 스크립트 시험이다.
+
+| 항목 | 기록 |
+|---|---|
+| 구성 | ECR 이미지(amd64, 태그=git 해시, immutable) → ECS 서비스 1개(Fargate 0.5 vCPU/1GB) → 타깃 그룹(IP 방식, `/health`) ← ALB(HTTP 80). DB는 RDS `db.t4g.micro` 단일 AZ(퍼블릭 아님). 비밀 7개는 SSM SecureString, 실행 역할이 환경변수로 주입 |
+| 복원 | RDS는 퍼블릭이 아니라 **일회성 ECS 태스크**(복원 이미지 `restore-<해시>`)로 덤프를 넣었다. 행 수 5개가 기대값과 일치(90 / 180519 / 228 / 1622 / 30) |
+| 확인한 것 | 서비스 `ACTIVE`, 타깃 `healthy`, `/health` 200, `/ready` 200(DB 2개·키 ok, `sslmode=require` 접속 포함), 키 없는 `/ask` 401, 키를 넣은 `/ask` 정답 9(A016), 요청 ID가 붙은 JSON 로그가 CloudWatch에 기록됨 |
+| 철거 | 사용자 보고 + 확인 명령 8개(`ecs list-clusters`, `elbv2 describe-load-balancers`, `rds describe-db-instances`·`describe-db-snapshots`, `ecr describe-repositories`, `logs describe-log-groups`, `ec2 describe-addresses`·`describe-network-interfaces`)가 모두 빈 결과. 보안 그룹·타깃 그룹 삭제 여부는 이 명령들로 확인되지 않았다 |
+| 실제 비용 | RDS 생성 화면 견적은 인스턴스 월 $18.25 + 스토리지 월 $2.62(콘솔 표시값). 실제 사용액·켜 둔 시간은 **미기록** |
+
+**겪은 문제**(상세는 walkthrough §6): 맥북 `AWS_PROFILE`에 `export`가 빠져 `InvalidClientTokenId` / 옛 `AWS_ACCESS_KEY_ID` 환경변수 / Docker 엔진 꺼짐 / 다른 리전에 보안 그룹 생성 / 태스크 정의의 이미지 태그 누락으로 리비전 2 생성 / `docker push`의 업로드 세션 오류(재시도로 해결) / Billing 화면은 루트가 IAM 접근을 활성화해야 열림 / 맥북 IP 변경으로 `/health` 시간 초과.
+
+**한계·미확인**
+- **HTTP 평문**(도메인이 없어 HTTPS 미적용). `sslmode=require`는 DB 연결을 암호화하지만 서버 인증서를 검증하지 않는다.
+- ECS 서비스의 **서킷 브레이커 자동 롤백은 동작을 확인하지 못했다**(첫 배포라 되돌릴 리비전이 없었음).
+- 태스크가 공인 IP를 가진다(NAT 미사용). 복원 태스크와 앱이 같은 실행 역할을 공유한다(역할이 `/pharma/*`를 읽을 수 있음, 앱 태스크 정의는 관리자 비밀번호를 연결하지 않음).
+- 단일 AZ, 태스크 1개. 콘솔로 만들어 Terraform에 기록이 없다.
+- 서울 리전의 ALB·Fargate 요금은 확인하지 못했다.
+- **IP 제한 차단은 확인했다**: 맥북 IP가 바뀐 날 `/health`가 시간 초과되었고(허용 IP 수정 후 통과), 이 PC(허용되지 않은 IP)에서도 시간 초과였다. 지난 배포에서 미검증이던 항목이다.
