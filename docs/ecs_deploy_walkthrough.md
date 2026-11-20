@@ -42,7 +42,7 @@
 
 | 용어 | 한 줄 정의 | 이 프로젝트의 실물 |
 |---|---|---|
-| 이미지 | 앱 실행에 필요한 모든 것을 묶은 설계도 파일 | `pharma-scm-agent` 이미지(루트 `Dockerfile`로 빌드) |
+| 이미지 | 앱 실행에 필요한 모든 것을 묶은 파일 | `pharma-scm-agent` 이미지(루트 `Dockerfile`로 빌드) |
 | 컨테이너 | 이미지를 실행한 것 | 태스크 안의 `api` 컨테이너 |
 | ECR | AWS의 이미지 보관함 | 저장소 `pharma-scm-agent` |
 | 태그 | 이미지의 버전 이름표 | 앱 `7b34645`, 복원 `restore-ede8677` |
@@ -53,18 +53,18 @@
 | ECS 서비스 | "태스크를 N개 켜 둬라"를 유지하는 관리자 | `pharma-api`(1개 유지) |
 | Fargate | 컨테이너를 돌릴 서버를 AWS가 알아서 준비해 주는 방식 | 이번 실행 방식 |
 | 타깃 그룹 | 요청을 받을 수 있는 태스크들의 명단 + 헬스체크 | `pharma-tg` |
-| ALB | 인터넷 요청을 받아 타깃 그룹에 나눠 주는 문지기 | 로비 서버 | `pharma-alb` |
-| 보안 그룹 | 자원마다 붙는 방화벽 규칙 | 출입 허가 목록 | `pharma-alb-sg`, `pharma-task-sg`, `pharma-rds-sg` |
-| 실행 역할 | 컨테이너가 **뜨기 전에** ECS가 쓰는 권한(이미지 pull, 비밀 읽기, 로그) | 빌드 파이프라인 계정 | `pharma-ecs-execution` |
-| SSM Parameter Store | 설정과 비밀을 보관하는 AWS 저장소 | 암호화된 설정 서버 | `/pharma/...` 파라미터 7개 |
-| SecureString | 암호화되어 저장되는 파라미터 타입 | | 7개 모두 이 타입 |
-| RDS | AWS가 운영해 주는 DB. SSH 접속 불가, 주소만 받아 씀 | 클라우드 세이브 | `pharma-db`(PostgreSQL 17) |
-| DSN | DB 접속 정보를 한 줄로 쓴 문자열 | | `postgresql://계정:비밀번호@주소:5432/pharma?sslmode=require` |
-| CloudWatch Logs | 컨테이너 로그가 모이는 곳 | 원격 Player.log 수집소 | 로그 그룹 `/ecs/pharma-scm-agent` |
-| VPC / 서브넷 | AWS 안의 사설 네트워크 | | 이번에는 **기본 VPC**만 사용(설계하지 않음) |
-| 리전 | AWS 데이터센터 지역. 자원은 리전별로 따로 존재 | | 서울 `ap-northeast-2` |
-| 서킷 브레이커 | 새 배포의 태스크가 계속 실패하면 배포를 멈추고 되돌리는 ECS 기능 | | 서비스에 켬(동작은 **미검증**) |
-| 헬스체크 | 주기적으로 `/health`를 호출해 살아 있는지 보는 것 | | 타깃 그룹이 수행 |
+| ALB | 인터넷 요청을 받아 타깃 그룹의 정상 태스크에 나눠 보내는 진입점 | `pharma-alb` |
+| 보안 그룹 | 자원마다 붙는 방화벽 규칙 | `pharma-alb-sg`, `pharma-task-sg`, `pharma-rds-sg` |
+| 실행 역할 | 컨테이너가 **뜨기 전에** ECS가 쓰는 권한(이미지 pull, 비밀 읽기, 로그) | `pharma-ecs-execution` |
+| SSM Parameter Store | 설정과 비밀을 보관하는 AWS 저장소 | `/pharma/...` 파라미터 7개 |
+| SecureString | 암호화되어 저장되는 파라미터 타입 | 7개 모두 이 타입 |
+| RDS | AWS가 운영해 주는 DB. SSH 접속 불가, 주소만 받아 씀 | `pharma-db`(PostgreSQL 17) |
+| DSN | DB 접속 정보를 한 줄로 쓴 문자열 | `postgresql://계정:비밀번호@주소:5432/pharma?sslmode=require` |
+| CloudWatch Logs | 컨테이너 로그가 모이는 곳 | 로그 그룹 `/ecs/pharma-scm-agent` |
+| VPC / 서브넷 | AWS 안의 사설 네트워크 | 이번에는 **기본 VPC**만 사용(설계하지 않음) |
+| 리전 | AWS 데이터센터 지역. 자원은 리전별로 따로 존재 | 서울 `ap-northeast-2` |
+| 서킷 브레이커 | 새 배포의 태스크가 계속 실패하면 배포를 멈추고 되돌리는 ECS 기능 | 서비스에 켬(동작은 **미검증**) |
+| 헬스체크 | 주기적으로 `/health`를 호출해 살아 있는지 보는 것 | 타깃 그룹이 수행 |
 
 **자주 헷갈린 구분**
 - **셸 변수 vs 환경변수**: `export`를 붙이지 않은 변수는 `aws` 같은 다른 프로그램에 전달되지 않는다(이번에 `AWS_PROFILE`로 겪음).
