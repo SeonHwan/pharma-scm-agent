@@ -6,7 +6,7 @@ variable "region" {
 # ALB와 서비스가 같은 서브넷을 쓰게 하는 변수. 서로 다른 AZ를 고르면 타깃이 unused가 된다(2d 사례).
 variable "azs" {
   type        = list(string)
-  default     = ["ap-northeast-2a", "ap-northeast-2b"]
+  default     = ["ap-northeast-2c", "ap-northeast-2d"]
   description = "ALB와 서비스가 함께 쓸 AZ"
 }
 
