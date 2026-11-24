@@ -15,7 +15,7 @@ resource "aws_security_group" "alb" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = [var.allowed_cidr]
+    cidr_blocks = var.allowed_cidrs
   }
 
   # Terraform은 명시하지 않은 아웃바운드를 지운다. 콘솔이 기본으로 만든 전체 허용을 그대로 적는다.

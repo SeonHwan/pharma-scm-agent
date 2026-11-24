@@ -19,3 +19,6 @@ deploy/terraform/.terraform/
 
 # macOS
 .DS_Store
+
+# Terraform 조회·plan 결과 저장 폴더: 계정과 리소스 ID가 들어 있어 커밋하지 않는다
+/tf-out/
