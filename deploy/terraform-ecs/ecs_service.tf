@@ -32,4 +32,10 @@ resource "aws_ecs_service" "api" {
 
   # 타깃 그룹이 리스너에 연결된 뒤에야 서비스를 만들 수 있다(ARN을 참조하지 않아 순서를 직접 적는다).
   depends_on = [aws_lb_listener.http]
+
+  # 배포(GitHub Actions)가 서비스를 새 태스크 정의 리비전으로 바꾼다. 이 값을 Terraform이 계속 비교하면
+  # 다음 plan에서 서비스를 코드의 옛 리비전으로 되돌리려 하므로, 태스크 정의는 Terraform이 만들 때만 정하고 이후 변경은 무시한다.
+  lifecycle {
+    ignore_changes = [task_definition]
+  }
 }

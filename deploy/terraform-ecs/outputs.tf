@@ -4,3 +4,8 @@
 output "rds_address" {
   value = aws_db_instance.main.address
 }
+
+# GitHub Actions의 변수(AWS_ROLE_ARN)에 넣을 값. 계정 ID가 들어 있어 워크플로 파일과 문서에는 적지 않는다.
+output "github_deploy_role_arn" {
+  value = aws_iam_role.github_deploy.arn
+}
