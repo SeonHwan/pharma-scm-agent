@@ -1,0 +1,15 @@
+{"no": 11, "model": "claude-sonnet-5-5", "stop_reason": "end_turn", "input_tokens": 1630, "output_tokens": 1262, "seconds": 10.3, "request_id": "req_011ChP9agnQk8EVGXqe6Hen4"}
+{"no": 12, "model": "claude-sonnet-5-5", "stop_reason": "end_turn", "input_tokens": 2260, "output_tokens": 1008, "seconds": 8.1, "request_id": "req_011ChPAA7YbHRMoJ8RAjQHw8"}
+{"no": 13, "model": "claude-sonnet-5-5", "stop_reason": "end_turn", "input_tokens": 1961, "output_tokens": 1071, "seconds": 9.1, "request_id": "req_011ChPAAhm96HCfHjsuXucgk"}
+{"no": 14, "model": "claude-sonnet-5-5", "stop_reason": "end_turn", "input_tokens": 1619, "output_tokens": 1019, "seconds": 8.5, "request_id": "req_011ChPABNvasMkX8gRzj7odg"}
+{"no": 15, "model": "claude-sonnet-5-5", "stop_reason": "end_turn", "input_tokens": 1946, "output_tokens": 1086, "seconds": 8.2, "request_id": "req_011ChPAC1PZsHwcw2VMYa6iw"}
+{"no": 16, "model": "claude-sonnet-5-5", "stop_reason": "end_turn", "input_tokens": 1533, "output_tokens": 966, "seconds": 7.8, "request_id": "req_011ChPACcbPYzw21xFgruRBa"}
+{"no": 17, "model": "claude-sonnet-5-5", "stop_reason": "end_turn", "input_tokens": 1917, "output_tokens": 1083, "seconds": 9.1, "request_id": "req_011ChPADBouQZCN2HqpNcyjK"}
+{"no": 18, "model": "claude-sonnet-5-5", "stop_reason": "end_turn", "input_tokens": 1545, "output_tokens": 1049, "seconds": 8.3, "request_id": "req_011ChPADrnhegZ9U4bPUvmYH"}
+{"no": 19, "model": "claude-sonnet-5-5", "stop_reason": "end_turn", "input_tokens": 2657, "output_tokens": 1093, "seconds": 8.3, "request_id": "req_011ChPAEUPqT2QgLTwuJD4WX"}
+{"no": 20, "model": "claude-sonnet-5-5", "stop_reason": "end_turn", "input_tokens": 1927, "output_tokens": 943, "seconds": 7.7, "request_id": "req_011ChPAF5rnXS8ffAnY9A4NN"}
+{"no": 21, "model": "claude-sonnet-5-5", "stop_reason": "end_turn", "input_tokens": 1529, "output_tokens": 1109, "seconds": 8.7, "request_id": "req_011ChPAFewcDcBtvUnkf65vK"}
+{"no": 22, "model": "claude-sonnet-5-5", "stop_reason": "end_turn", "input_tokens": 1631, "output_tokens": 1095, "seconds": 8.3, "request_id": "req_011ChPAGJHv9X8ryJsoCfMox"}
+{"no": 23, "model": "claude-sonnet-5-5", "stop_reason": "end_turn", "input_tokens": 1574, "output_tokens": 1112, "seconds": 9.0, "request_id": "req_011ChPAGuZxj3AHGz86m7Rex"}
+{"no": 24, "model": "claude-sonnet-5-5", "stop_reason": "end_turn", "input_tokens": 1590, "output_tokens": 1073, "seconds": 8.8, "request_id": "req_011ChPAHaBgCNAfyiyT2eYtP"}
+{"no": 25, "model": "claude-sonnet-5-5", "stop_reason": "end_turn", "input_tokens": 1629, "output_tokens": 1112, "seconds": 8.7, "request_id": "req_011ChPAJDyn3JuBFGvwWDmoy"}
