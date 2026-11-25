@@ -5,33 +5,11 @@ on:
   pull_request:
 
 jobs:
+  # 린트와 테스트. 환경 준비(Postgres, uv, 의존성, DB 복원)는 재사용 워크플로 _checks.yml이 한다.
   test:
-    runs-on: ubuntu-24.04
-    # config.py 기본 DSN(localhost:5433)과 맞춘 Postgres. 덤프 복원 뒤에는 DB 테스트도 실행된다.
-    services:
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_USER: pharma_admin
-          POSTGRES_PASSWORD: local-dev-only
-          POSTGRES_DB: pharma
-        ports:
-          - 5433:5432
-        options: >-
-          --health-cmd "pg_isready -U pharma_admin -d pharma"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
-        with:
-          version: "0.12.23"
-      - run: uv sync --frozen
-      - run: uv run ruff check .
-      - run: scripts/ci_restore_db.sh
-      # DB가 필요한 테스트는 Postgres에 접속하지 못하면 건너뛴다(로컬에서 DB 없이 돌릴 때).
-      - run: uv run pytest -q
+    uses: ./.github/workflows/_checks.yml
+    with:
+      run_tests: true
 
   docker:
     runs-on: ubuntu-24.04
