@@ -1,0 +1,20 @@
+{"sample_no": 1, "section_id": "SOP-20-8", "flagged": false, "judgment": "O", "reviewer": "사용자"}
+{"sample_no": 2, "section_id": "SOP-24-2", "flagged": false, "judgment": "O", "reviewer": "사용자"}
+{"sample_no": 3, "section_id": "SOP-22-3", "flagged": false, "judgment": "O", "reviewer": "사용자"}
+{"sample_no": 4, "section_id": "SOP-24-3", "flagged": false, "judgment": "O", "reviewer": "사용자"}
+{"sample_no": 5, "section_id": "SOP-14-3", "flagged": true, "judgment": "O", "reviewer": "사용자"}
+{"sample_no": 6, "section_id": "SOP-16-7", "flagged": false, "judgment": "O", "reviewer": "사용자"}
+{"sample_no": 7, "section_id": "SOP-23-1", "flagged": true, "judgment": "X", "reviewer": "사용자", "note": "사용자 사유: 질의의 '보류 걸린 약'이 회수 명령 로트인지 변조·위조 의심 로트인지 알 수 없다. 어떤 사유로도 예외 불출 불가(SOP-23-2)와 예외 불출 허용(SOP-23-1)이 코퍼스 안에서 충돌하므로 사람이 직접 판단할 부분이다."}
+{"sample_no": 8, "section_id": "SOP-18-4", "flagged": false, "judgment": "O", "reviewer": "사용자"}
+{"sample_no": 9, "section_id": "SOP-13-9", "flagged": false, "judgment": "O", "reviewer": "사용자"}
+{"sample_no": 10, "section_id": "SOP-20-2", "flagged": false, "judgment": "O", "reviewer": "사용자"}
+{"sample_no": 11, "section_id": "SOP-21-4", "flagged": false, "judgment": "O", "reviewer": "사용자"}
+{"sample_no": 12, "section_id": "SOP-19-7", "flagged": true, "judgment": "O", "reviewer": "사용자"}
+{"sample_no": 13, "section_id": "SOP-12-1", "flagged": false, "judgment": "O", "reviewer": "사용자"}
+{"sample_no": 14, "section_id": "SOP-20-3", "flagged": false, "judgment": "O", "reviewer": "사용자"}
+{"sample_no": 15, "section_id": "SOP-18-2", "flagged": true, "judgment": "O", "reviewer": "사용자"}
+{"sample_no": 16, "section_id": "SOP-21-3", "flagged": true, "judgment": "O", "reviewer": "사용자"}
+{"sample_no": 17, "section_id": "SOP-17-2", "flagged": false, "judgment": "O", "reviewer": "사용자"}
+{"sample_no": 18, "section_id": "SOP-18-5", "flagged": false, "judgment": "O", "reviewer": "사용자"}
+{"sample_no": 19, "section_id": "SOP-22-8", "flagged": false, "judgment": "O", "reviewer": "사용자"}
+{"sample_no": 20, "section_id": "SOP-11-9", "flagged": true, "judgment": "X", "reviewer": "사용자", "note": "사용자는 사유를 적지 않았다. 참고: 검증 모델은 SOP-22-2(온도 기록 7년)와 보관 기준이 중첩된다고 메모했다."}
