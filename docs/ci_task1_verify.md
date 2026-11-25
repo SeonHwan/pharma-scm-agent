@@ -1,5 +1,7 @@
 # 과제 1 검증 절차: CI에서 DB 테스트 실행 (개인 PC용)
 
+> **상태(2026-11-25): 과거 검증 절차다(작성 시점 2026-11-10).** 아래의 `36 passed`와 `learn/ci-cd` 브랜치는 그 시점의 값이다. 현재 pytest는 111개이고(`uv run pytest --collect-only -q`로 확인), `master`에서 바로 작업한다. 현재 CI 규칙은 `docs/ci_operations.md`를 본다.
+
 `docs/ci_eval_gate_plan.md`의 과제 1 결과를 다른 PC에서 직접 확인하는 절차다.
 목표: 건너뛰던 DB 테스트 4개(`tests/test_tools.py`)가 실행되어 **36 passed, skip 0**이 된다.
 

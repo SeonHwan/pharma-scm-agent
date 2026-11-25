@@ -1,5 +1,7 @@
 # P5 배포 가이드 (맥북에서 실행)
 
+> **상태(2026-11-25): P5 임시 배포(EC2) 기록이다. 이 구성은 철거됐다.** 현재 배포 방식은 ECS Fargate + Terraform이다(`docs/ecs_deploy_walkthrough.md`, `deploy/terraform-ecs/`, CD는 `HANDOFF.md` 8단계). 아래의 "맥북에서 실행"은 당시 이 PC에서 AWS 호출이 안 되던 사정이고, 지금은 이 PC(WSL)에서도 AWS CLI가 동작한다.
+
 목표: **AWS EC2 한 대에 올려서 외부에서 호출해 보고, 바로 내린다.** 상시 운영이 아니다.
 이 PC는 인증서 문제로 `aws` 호출이 안 되어 맥북에서 실행한다. 이 문서는 맥북에서 위에서 아래로 따라 하는 체크리스트다.
 
