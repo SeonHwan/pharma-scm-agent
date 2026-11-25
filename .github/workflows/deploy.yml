@@ -31,7 +31,7 @@ permissions:
   contents: read
 
 jobs:
-  # 배포 전 관문: ci.yml의 테스트 단계와 eval-smoke.yml의 평가 게이트 단계를 한 job에 모았다.
+  # 배포 전 관문: 린트·테스트와 스모크 평가 게이트를 재사용 워크플로 _checks.yml로 돌린다(ci.yml, eval-smoke.yml과 같은 틀).
   # 이 job이 실패하거나 실행되지 않으면 아래 deploy job은 실행되지 않는다.
   gate:
     # master가 아니면 건너뛴다(배포 역할은 master 토큰만 맡을 수 있다). push는 DEPLOY_ENABLED가 true일 때만,
@@ -40,50 +40,13 @@ jobs:
       github.ref == 'refs/heads/master' &&
       ((github.event_name == 'push' && vars.DEPLOY_ENABLED == 'true') ||
       (github.event_name == 'workflow_dispatch' && inputs.approve_cost))
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    env:
+    uses: ./.github/workflows/_checks.yml
+    with:
+      run_tests: true
+      run_smoke: true
+      run_prefix: gate
+    secrets:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      RUN_ID: gate_${{ github.sha }}
-    # ci.yml과 같은 Postgres(config.py 기본 DSN과 맞춤). 테스트와 에이전트 도구가 실제 DB를 조회한다.
-    services:
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_USER: pharma_admin
-          POSTGRES_PASSWORD: local-dev-only
-          POSTGRES_DB: pharma
-        ports:
-          - 5433:5432
-        options: >-
-          --health-cmd "pg_isready -U pharma_admin -d pharma"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
-        with:
-          version: "0.12.23"
-      - run: uv sync --frozen
-      - run: uv run ruff check .
-      - run: scripts/ci_restore_db.sh
-      - run: uv run pytest -q
-      # 문항 6개(eval/smoke_ids.txt). 실행 중 예외로 실패한 문항이 있으면 --strict가 여기서 멈춘다.
-      - name: 스모크 평가 실행
-        run: uv run python -m pharma_scm.evalset.run_eval --run-id "$RUN_ID" --ids "$(cat eval/smoke_ids.txt)" --strict
-      - name: 집계
-        run: uv run python -m pharma_scm.evalset.report "$RUN_ID" --json "data/runs/$RUN_ID/summary.json"
-      # 안전·정답률·형식·비용을 eval/baseline.json 기준으로 판정한다. 실패하면 이 job이 실패해 배포로 넘어가지 않는다.
-      - name: 게이트 판정
-        run: uv run python -m pharma_scm.evalset.gate "data/runs/$RUN_ID/summary.json"
-      - name: 결과 보관
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: gate-${{ github.sha }}
-          path: data/runs/${{ env.RUN_ID }}
-          retention-days: 14
 
   # 이미지를 ECR에 올리고 ECS 서비스를 새 이미지로 갱신한다. gate가 통과한 경우에만 실행된다.
   deploy:
