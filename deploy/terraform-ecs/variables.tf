@@ -41,9 +41,11 @@ variable "desired_count" {
   description = "서비스가 유지할 앱 태스크 수"
 }
 
-# 배포 역할을 맡을 수 있는 GitHub 저장소(소유자/이름). GitHub이 토큰에 넣는 표기와 대소문자까지 같아야 한다.
-variable "github_repo" {
+# 배포 역할을 맡을 수 있는 GitHub 저장소를 토큰의 sub 값에서 가리키는 부분("repo:" 뒤, ":ref:..." 앞).
+# 이 저장소는 sub에 소유자·저장소의 숫자 ID가 붙는 형식(불변 형식)을 쓴다. 이름만 쓰면 일치하지 않아 역할을 맡을 수 없다.
+# 값은 `gh api repos/소유자/저장소/actions/oidc/customization/sub`의 sub_claim_prefix에서 "repo:" 뒤를 가져온다.
+variable "github_subject" {
   type        = string
-  default     = "SeonHwan/pharma-scm-agent"
-  description = "배포 역할을 맡을 수 있는 GitHub 저장소"
+  default     = "SeonHwan@60860713/pharma-scm-agent@1443635374"
+  description = "배포 역할을 맡을 수 있는 GitHub 저장소의 sub 표기(불변 형식)"
 }

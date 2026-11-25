@@ -23,7 +23,8 @@ resource "aws_iam_role" "github_deploy" {
         StringEquals = {
           "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
           # 이 저장소의 master 브랜치에서 실행된 워크플로의 토큰만 허용한다(다른 저장소·브랜치·PR은 거부).
-          "token.actions.githubusercontent.com:sub" = "repo:${var.github_repo}:ref:refs/heads/master"
+          # 저장소 표기는 숫자 ID가 붙은 불변 형식이다(variables.tf의 github_subject).
+          "token.actions.githubusercontent.com:sub" = "repo:${var.github_subject}:ref:refs/heads/master"
         }
       }
     }]
