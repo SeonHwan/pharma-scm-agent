@@ -1,6 +1,7 @@
+import hashlib
 import json
 
-from pharma_scm.retrieval import register
+from pharma_scm.retrieval import finalize_queries, register
 
 REGISTERED = json.loads(register.REGISTERED.read_text(encoding="utf-8"))
 
@@ -20,3 +21,14 @@ def test_corpus_size():
     assert len(got) == 25
     sections = sum(p.read_text(encoding="utf-8").count("\n## SOP-") for p in register.corpus_files())
     assert 150 <= sections <= 200, f"섹션 수 {sections}개가 사전 등록 범위(150~200)를 벗어난다"
+
+
+def test_final_queries_md5():
+    got = hashlib.md5(finalize_queries.FINAL.read_bytes()).hexdigest()
+    assert got == REGISTERED["queries_v2_final_md5"], f"최종 질의 파일이 등록값과 다르다. {HINT}"
+
+
+def test_final_queries_count():
+    rows = [json.loads(line) for line in finalize_queries.FINAL.read_text(encoding="utf-8").splitlines() if line]
+    assert len(rows) == REGISTERED["queries_v2_final_count"] == 126
+    assert len({r["section_id"] for r in rows}) == len(rows), "질의가 섹션마다 하나여야 한다"

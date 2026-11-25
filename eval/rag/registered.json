@@ -25,5 +25,7 @@
     "eval/rag/corpus_v2/SOP-23_불출예외승인.md": "8c2e90d549c6805b3ae6aefd06c8e936",
     "eval/rag/corpus_v2/SOP-24_이상정보접수와전달.md": "bcaa9d2f656e0d3cb1b9092337566f6e",
     "eval/rag/corpus_v2/SOP-25_수입통관과시험검사.md": "6b5e2066a7588e1b2a7592a5c4aa4c83"
-  }
+  },
+  "queries_v2_final_md5": "488e6b55381687fa8a59b901412bfc0f",
+  "queries_v2_final_count": 126
 }
