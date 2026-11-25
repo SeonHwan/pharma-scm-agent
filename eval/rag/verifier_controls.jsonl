@@ -1,0 +1,8 @@
+{"id": "K1", "kind": "ambiguous", "query": "온도 기록기는 몇 분 간격으로 기록하게 설정하나요?", "expected_sections": ["SOP-02-1", "SOP-11-5", "SOP-15-4"]}
+{"id": "K2", "kind": "ambiguous", "query": "온도 기록은 몇 년 동안 보관해야 하나요?", "expected_sections": ["SOP-02-1", "SOP-11-9", "SOP-15-4", "SOP-22-2"]}
+{"id": "K3", "kind": "ambiguous", "query": "온도가 기준을 벗어난 걸 알게 되면 얼마 안에 누구한테 알려야 해요?", "expected_sections": ["SOP-02-2", "SOP-11-2", "SOP-15-5"]}
+{"id": "K4", "kind": "ambiguous", "query": "냉장 약이 정해진 온도 범위를 벗어난 시간이 얼마를 넘으면 문제가 되나요?", "expected_sections": ["SOP-02-2", "SOP-11-1", "SOP-11-7", "SOP-12-4"]}
+{"id": "K5", "kind": "ambiguous", "query": "폐기한 기록은 몇 년간 보관하나요?", "expected_sections": ["SOP-09-2", "SOP-25-9"]}
+{"id": "K6", "kind": "ambiguous", "query": "격리 중인 로트를 풀어 주려면 누구의 서명이나 승인이 필요해요?", "expected_sections": ["SOP-04-2", "SOP-24-6", "SOP-23-5", "SOP-23-6"]}
+{"id": "N1", "kind": "unanswerable", "query": "약국을 새로 열려면 어떤 허가를 받아야 하나요?", "expected_sections": []}
+{"id": "N2", "kind": "unanswerable", "query": "직원이 연차 휴가를 쓰려면 며칠 전에 신청해야 해요?", "expected_sections": []}
