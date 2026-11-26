@@ -13,7 +13,7 @@ import numpy as np
 
 from .. import config
 from .corpus import load_corpus, section_text
-from .embed_check import MODEL
+from .models import DENSE_MODEL, DENSE_REVISION, load_dense
 from .fusion import Rrf
 from .methods import Bm25, rank_ids
 from .register import md5_map
@@ -55,9 +55,7 @@ class SopIndex:
 
 def model_embedder():
     """bge-m3로 질의 하나를 정규화 벡터로 만드는 함수. 이미지에는 모델이 미리 들어 있다."""
-    from sentence_transformers import SentenceTransformer
-
-    model = SentenceTransformer(MODEL, device="cpu")
+    model = load_dense("cpu")
     return model, lambda q: model.encode([q], normalize_embeddings=True, show_progress_bar=False)[0]
 
 
@@ -69,7 +67,8 @@ def build(out_dir=INDEX_DIR):
     out_dir.mkdir(parents=True, exist_ok=True)
     np.save(out_dir / VECTORS, vectors.astype(np.float32))
     (out_dir / META).write_text(json.dumps({
-        "model": MODEL, "section_ids": [s["section_id"] for s in sections], "corpus_md5": md5_map(),
+        "model": DENSE_MODEL, "revision": DENSE_REVISION,
+        "section_ids": [s["section_id"] for s in sections], "corpus_md5": md5_map(),
     }, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     return len(sections)
 
@@ -81,6 +80,8 @@ def load(index_dir=INDEX_DIR, embed_query=None):
     if meta["corpus_md5"] != md5_map() or meta["section_ids"] != [s["section_id"] for s in sections]:
         raise RuntimeError("sop/ 문서가 색인을 만든 뒤 바뀌었다. `python -m pharma_scm.retrieval.index`로 다시 만든다.")
     if embed_query is None:
+        if (meta.get("model"), meta.get("revision")) != (DENSE_MODEL, DENSE_REVISION):
+            raise RuntimeError("색인을 만든 모델이 지금 모델과 다르다. 색인을 다시 만든다.")
         _, embed_query = model_embedder()
     return SopIndex(sections, np.load(index_dir / VECTORS), embed_query)
 

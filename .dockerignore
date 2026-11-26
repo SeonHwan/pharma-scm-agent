@@ -11,7 +11,7 @@ data
 eval
 docs
 tests
-sop
+build
 HANDOFF.md
 README.md
 openfda_result.txt

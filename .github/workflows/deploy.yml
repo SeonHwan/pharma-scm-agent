@@ -11,6 +11,7 @@ on:
     branches: [master]
     paths:
       - "src/**"
+      - "sop/**"
       - "pyproject.toml"
       - "uv.lock"
       - "Dockerfile"

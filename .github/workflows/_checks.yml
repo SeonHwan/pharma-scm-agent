@@ -59,6 +59,19 @@ jobs:
       - name: 테스트
         if: inputs.run_tests
         run: uv run pytest -q
+      # 스모크 평가는 실제 search_sop(bge-m3 임베딩 검색)를 쓴다. 모델(약 2.3GB)은 캐시하고 색인은 매번 만든다.
+      # 캐시 키는 모델 이름·리비전이 적힌 models.py의 해시라서 모델을 바꾸면 새로 받는다.
+      - name: 임베딩 모델 캐시
+        if: inputs.run_smoke
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-${{ hashFiles('src/pharma_scm/retrieval/models.py') }}
+      - name: 규정 검색 색인 빌드
+        if: inputs.run_smoke
+        run: |
+          uv run python src/pharma_scm/retrieval/models.py
+          uv run python -m pharma_scm.retrieval.index
       # 문항 6개(eval/smoke_ids.txt). 실행 중 예외로 실패한 문항이 있으면 --strict가 여기서 멈춘다.
       - name: 스모크 평가 실행
         if: inputs.run_smoke

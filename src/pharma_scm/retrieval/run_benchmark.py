@@ -17,12 +17,10 @@ from .. import config
 from . import corpus, metrics, register
 from .benchmark_data import load_benchmark
 from .dense import DenseBgeM3
-from .embed_check import MODEL as DENSE_MODEL
-from .embed_check import pick_device
 from .finalize_queries import FINAL
 from .fusion import Rrf
 from .methods import Bm25, TfidfCosine
-from .rerank import MODEL as RERANK_MODEL
+from .models import DENSE_MODEL, RERANK_MODEL, load_dense, pick_device
 from .rerank import Reranker
 
 RESULT = config.ROOT / "eval" / "rag" / "benchmark_results.json"
@@ -53,13 +51,13 @@ def timed(fn):
 
 def build(sections):
     """방식 5개를 만들고 구축 시간을 재서 돌려준다. 모델 로드는 색인 구축과 따로 잰다."""
-    from sentence_transformers import CrossEncoder, SentenceTransformer
+    from sentence_transformers import CrossEncoder
 
     device = pick_device()
     build_s, load_s = {}, {}
     r0, build_s["R0"] = timed(lambda: TfidfCosine(sections))
     r1, build_s["R1"] = timed(lambda: Bm25(sections))
-    dense_model, load_s[DENSE_MODEL] = timed(lambda: SentenceTransformer(DENSE_MODEL, device=device))
+    dense_model, load_s[DENSE_MODEL] = timed(lambda: load_dense(device))
     r2, build_s["R2"] = timed(lambda: DenseBgeM3(sections, model=dense_model))
     r3 = Rrf([r1, r2])  # 결합 자체는 색인이 없다(질의마다 R1, R2를 실행)
     cross, load_s[RERANK_MODEL] = timed(lambda: CrossEncoder(RERANK_MODEL, device=device))

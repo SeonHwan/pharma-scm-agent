@@ -6,6 +6,8 @@ on:
     paths:
       - "src/pharma_scm/agent/**"
       - "src/pharma_scm/evalset/**"
+      - "src/pharma_scm/retrieval/**"
+      - "sop/**"
       - "eval/**"
       - "scripts/ci_restore_db.sh"
       - "deploy/pharma.sql.gz"

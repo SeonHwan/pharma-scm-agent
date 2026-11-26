@@ -7,7 +7,7 @@
 """
 
 from .corpus import section_text
-from .embed_check import MODEL, pick_device
+from .models import load_dense
 from .methods import rank_ids
 
 
@@ -17,10 +17,8 @@ class DenseBgeM3:
     name = "R2"
 
     def __init__(self, sections, model=None):
-        from sentence_transformers import SentenceTransformer
-
         self.ids = [s["section_id"] for s in sections]
-        self.model = model or SentenceTransformer(MODEL, device=pick_device())
+        self.model = model or load_dense()
         self.vecs = self.model.encode([section_text(s) for s in sections], batch_size=16,
                                       normalize_embeddings=True, show_progress_bar=False)
 

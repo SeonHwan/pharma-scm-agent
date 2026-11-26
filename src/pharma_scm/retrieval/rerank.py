@@ -6,9 +6,9 @@ R3의 순서를 그대로 뒤에 붙인다. 점수는 순위에만 쓰고, 같�
 """
 
 from .corpus import section_text
-from .embed_check import pick_device
+from .models import RERANK_MODEL as MODEL
+from .models import pick_device
 
-MODEL = "BAAI/bge-reranker-v2-m3"
 TOP_N = 20
 
 

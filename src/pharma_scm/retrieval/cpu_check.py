@@ -19,11 +19,9 @@ from .. import config
 from . import corpus, metrics
 from .benchmark_data import load_benchmark
 from .dense import DenseBgeM3
-from .embed_check import MODEL as DENSE_MODEL
-from .embed_check import pick_device
 from .fusion import Rrf
 from .methods import Bm25
-from .rerank import MODEL as RERANK_MODEL
+from .models import RERANK_MODEL, load_dense, pick_device
 from .rerank import Reranker
 from .run_benchmark import RESULT, run_method
 
@@ -44,7 +42,7 @@ def main():
     if pick_device() != "cpu":
         raise SystemExit("CPU로 고정되지 않았다")
     import torch
-    from sentence_transformers import CrossEncoder, SentenceTransformer
+    from sentence_transformers import CrossEncoder
 
     items = load_benchmark()
     sample_idx = list(range(0, len(items), a.every))
@@ -53,7 +51,7 @@ def main():
     gpu = json.loads(RESULT.read_text(encoding="utf-8"))["queries"]
 
     mem = {"모델 올리기 전": peak_rss_mb()}
-    dense_model = SentenceTransformer(DENSE_MODEL, device="cpu")
+    dense_model = load_dense("cpu")
     mem["bge-m3 로드 후"] = peak_rss_mb()
     r1 = Bm25(sections)
     started = time.perf_counter()
