@@ -7,8 +7,9 @@ resource "aws_ecs_service" "api" {
   desired_count   = var.desired_count
   launch_type     = "FARGATE"
 
-  # 새 태스크가 뜬 직후 헬스 체크가 실패해도 60초 동안은 교체하지 않는다(앱이 시작하는 시간).
-  health_check_grace_period_seconds = 60
+  # 새 태스크가 뜬 직후 헬스 체크가 실패해도 120초 동안은 교체하지 않는다(앱이 시작하는 시간).
+  # 시작할 때 규정 검색 모델을 읽어 로컬 0.5 CPU에서 /health까지 약 13초였다. 첫 실행의 디스크 읽기를 감안해 넉넉히 둔다.
+  health_check_grace_period_seconds = 120
 
   # 롤링 배포가 계속 실패하면 배포를 멈추고 직전 리비전으로 되돌린다. 실제 롤백은 아직 검증하지 않았다.
   deployment_circuit_breaker {

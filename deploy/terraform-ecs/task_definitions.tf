@@ -7,11 +7,13 @@ locals {
 resource "aws_ecs_task_definition" "app" {
   family = "pharma-scm-agent"
 
-  # Fargate: 태스크마다 ENI와 IP를 받는 awsvpc 방식. cpu 512 = 0.5 vCPU, memory는 MiB.
+  # Fargate: 태스크마다 ENI와 IP를 받는 awsvpc 방식. cpu 1024 = 1 vCPU, memory는 MiB.
+  # 규정 검색 모델(bge-m3)이 이미지에 들어 있어 메모리가 대기 약 0.8GB, 모델 파일 매핑까지 약 2GB다.
+  # 0.5 vCPU는 검색 p95 약 0.7초, 1 vCPU는 약 0.35초였다(로컬 측정, docs/rag_eval_results.md §9).
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
-  cpu                      = 512
-  memory                   = 1024
+  cpu                      = 1024
+  memory                   = 3072
 
   # 이미지를 ECR에서 받고 SSM 비밀을 읽는 것은 실행 역할이 한다(앱 코드가 쓰는 태스크 역할은 두지 않는다).
   execution_role_arn = aws_iam_role.execution.arn
