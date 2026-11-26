@@ -22,6 +22,9 @@ dev = [
 gen = [
     "openai==3.59.0",
 ]
+retrieval = [
+    "sentence-transformers==6.3.0",
+]
 
 [build-system]
 requires = ["uv_build>=0.12.23,<0.13.0"]
