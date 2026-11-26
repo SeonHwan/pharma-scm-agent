@@ -1,4 +1,4 @@
-"""벤치마크 코퍼스(기존 sop/ + eval/rag/corpus_v2/)를 섹션 단위로 읽고, 질의와 섹션의 어휘 겹침을 계산한다."""
+"""규정 코퍼스(sop/ 문서 전체)를 섹션 단위로 읽고, 질의와 섹션의 어휘 겹침을 계산한다."""
 
 import re
 
@@ -27,7 +27,7 @@ def parse_text(text):
 
 
 def load_corpus():
-    """벤치마크 코퍼스 전체 섹션(문서 번호와 섹션 번호 순)."""
+    """코퍼스 전체 섹션(문서 번호와 섹션 번호 순)."""
     out = []
     for path in corpus_files():
         out.extend(parse_text(path.read_text(encoding="utf-8")))

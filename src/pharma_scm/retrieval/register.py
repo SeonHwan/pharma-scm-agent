@@ -1,4 +1,4 @@
-"""규정 검색 벤치마크의 고정 파일 목록과 md5를 eval/rag/registered.json에 등록한다(docs/rag_eval_protocol.md §2).
+"""규정 문서(sop/)와 벤치마크 질의의 고정 파일 목록과 md5를 eval/rag/registered.json에 등록한다(docs/rag_eval_protocol.md §2).
 
     uv run python -m pharma_scm.retrieval.register
 
@@ -15,9 +15,8 @@ REGISTERED = config.ROOT / "eval" / "rag" / "registered.json"
 
 
 def corpus_files():
-    """벤치마크 코퍼스: 기존 sop/ 문서와 eval/rag/corpus_v2/ 문서."""
-    return sorted(config.SOP_DIR.glob("SOP-*.md")) + sorted(
-        (config.ROOT / "eval" / "rag" / "corpus_v2").glob("SOP-*.md"))
+    """코퍼스 = sop/ 문서 전체. 서비스하는 규정 문서와 벤치마크가 같은 파일을 쓴다."""
+    return sorted(config.SOP_DIR.glob("SOP-*.md"))
 
 
 def md5_map():

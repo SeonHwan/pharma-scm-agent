@@ -22,7 +22,7 @@ MAX_TOKENS = 8000
 # 단가(100만 토큰당 달러). 2026-11-03에 확인한 값이라 바뀌었을 수 있다.
 PRICE_IN, PRICE_OUT = 2.0, 10.0
 
-OUT_DIR = config.ROOT / "eval" / "rag" / "corpus_v2"
+OUT_DIR = config.SOP_DIR  # 생성 당시에는 eval/rag/corpus_v2/였고 이후 sop/로 합쳤다(protocol 9-9)
 LOG_PATH = config.ROOT / "eval" / "rag" / "generation_log.jsonl"
 NOTICE = "> 이 문서는 포트폴리오용 합성 SOP이며 실제 GMP·사내 규정이 아니다."
 
