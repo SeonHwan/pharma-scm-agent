@@ -16,7 +16,7 @@ from .finalize_queries import FINAL
 QUESTIONS = config.ROOT / "eval" / "questions.jsonl"
 
 
-def load_v1(by_id):
+def load_v1():
     """eval/questions.jsonl의 규정 문항(C001~C020). 정답 섹션이 하나인 문항만 있다."""
     out = []
     for line in QUESTIONS.read_text(encoding="utf-8").splitlines():
@@ -36,7 +36,7 @@ def load_v2():
 def load_benchmark():
     """질의 목록. 항목: id, query, gold(정답 섹션 id), source(v1/v2), overlap, low_overlap."""
     by_id = {s["section_id"]: s for s in corpus.load_corpus()}
-    items = load_v1(by_id) + load_v2()
+    items = load_v1() + load_v2()
     for it in items:
         it["overlap"] = corpus.overlap(it["query"], by_id[it["gold"]])
     median = statistics.median(it["overlap"] for it in items)
