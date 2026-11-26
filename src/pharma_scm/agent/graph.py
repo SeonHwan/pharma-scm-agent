@@ -21,6 +21,10 @@ def make_llm():
     import os
 
     config.load_env()
+    # Anthropic SDK는 전역 OpenTelemetry 트레이서가 있으면 API 호출마다 자체 span을 만든다. Langfuse(OpenTelemetry 기반)가
+    # 켜져 있으면 LangChain 콜백의 기록과 같은 호출이 두 번 남아 트레이스 비용이 두 배로 합산되므로 끈다(docs/langfuse.md).
+    # 클라이언트를 만들 때 읽는 값이라 ChatAnthropic보다 먼저 둔다.
+    os.environ.setdefault("ANTHROPIC_OPEN_TELEMETRY", "false")
     if not os.environ.get("ANTHROPIC_API_KEY"):
         raise RuntimeError(".env에 ANTHROPIC_API_KEY가 없다")
     return ChatAnthropic(model=config.AGENT_MODEL, max_tokens=2048,
