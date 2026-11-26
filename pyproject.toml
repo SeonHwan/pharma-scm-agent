@@ -6,6 +6,7 @@ requires-python = "==3.13.*"
 dependencies = [
     "fastapi==0.162.0",
     "langchain-anthropic==1.7.9",
+    "langfuse==5.2.0",
     "langgraph==1.2.19",
     "psycopg[binary]==3.2.9",
     "python-dotenv==1.2.4",

@@ -20,6 +20,7 @@ from datetime import datetime
 from .. import config
 from ..agent.graph import MAX_TOOL_ROUNDS, PROMPT_CACHE, build_graph
 from ..agent.prompt import PROMPT_SHA, PROMPT_VERSION
+from ..agent import tracing
 from ..agent.run import ask
 from .grader import grade
 
@@ -60,9 +61,13 @@ def count_problems(results):
     return errors, fmt_bad
 
 
-def run_one(q, graph, out_dir):
+def run_one(q, graph, out_dir, run_id=None, qset="v1"):
+    trace = {"name": "eval", "external_id": f"{run_id}:{q['id']}", "session_id": run_id,
+             "tags": ["eval", qset, q["type"]],
+             "metadata": {"eval_run_id": run_id, "question_id": q["id"], "question_type": q["type"],
+                          "split": q.get("split")}}
     try:
-        r = ask(q["question"], graph)
+        r = ask(q["question"], graph, trace=trace)
     except Exception as e:  # 한 문항의 실패가 전체 실행을 멈추지 않게 한다
         r = {"question": q["question"], "answer": None, "tool_calls": [], "tools_called": [],
              "tokens": {"input": 0, "output": 0, "llm_calls": 0}, "latency_s": None,
@@ -72,6 +77,7 @@ def run_one(q, graph, out_dir):
         c["result"] = (c.get("result") or "")[:RESULT_CLIP]
     r["id"], r["type"] = q["id"], q["type"]
     r["grade"] = grade(q, r["answer"] or "", r["tools_called"])
+    tracing.score_grade(r.get("trace_id"), r["grade"])
     (out_dir / f"{q['id']}.json").write_text(json.dumps(r, ensure_ascii=False, indent=1),
                                              encoding="utf-8")
     return r
@@ -118,12 +124,13 @@ def main(argv=None):
     done = 0
     results = []
     with ThreadPoolExecutor(a.workers) as ex:
-        for r in ex.map(lambda q: run_one(q, graph, out_dir), todo):
+        for r in ex.map(lambda q: run_one(q, graph, out_dir, a.run_id, a.qset), todo):
             done += 1
             results.append(r)
             g = r["grade"]
             print(f"[{done}/{len(todo)}] {r['id']} {'PASS' if g['pass'] else 'FAIL'} "
                   f"{g['reason'][:60]} {r['error'] or ''}", flush=True)
+    tracing.flush()
     errors, fmt_bad = count_problems(results)
     print(f"이번 실행 {len(results)}개: 실행 오류 {errors}건, 형식 위반 {fmt_bad}건")
     if a.strict and errors:

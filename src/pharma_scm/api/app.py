@@ -24,6 +24,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .. import config
+from ..agent import tracing
 from ..agent.graph import build_graph
 from ..agent.observability import TimingCallback
 from ..agent.prompt import PROMPT_VERSION
@@ -69,7 +70,10 @@ def make_real_agent():
     """
     sop_index()
     graph = build_graph()
-    return lambda q, cb: ask(q, graph, callbacks=cb)
+    # 요청 ID(contextvar, to_thread로 스레드에 복사됨)로 트레이스 ID를 만들어 로그와 트레이스를 잇는다.
+    return lambda q, cb: ask(q, graph, callbacks=cb,
+                             trace={"name": "api_ask", "external_id": request_id_var.get(), "tags": ["api"],
+                                    "metadata": {"request_id": request_id_var.get()}})
 
 
 class AgentRunner:
@@ -104,6 +108,7 @@ def create_app(settings, agent_factory=None, ready_checks=None):
     async def lifespan(app):
         agent.get()  # 서버 시작 때 만들어 두면 모델 키가 없을 때 첫 요청이 아니라 시작에서 실패한다
         yield
+        tracing.flush()  # 종료 때 보내지 않은 트레이스를 보낸다(Langfuse가 꺼져 있으면 아무것도 안 함)
 
     app = FastAPI(title="pharma-scm-agent", lifespan=lifespan)
     key_bytes = [k.encode() for k in settings.api_keys]
@@ -191,6 +196,7 @@ def create_app(settings, agent_factory=None, ready_checks=None):
             raise ApiError(500, "internal_error", "내부 오류")
         latency_ms = round((time.perf_counter() - t0) * 1000, 1)
         info = {"key_id": key_id, "question_chars": len(body.question), "latency_ms": latency_ms,
+                "trace_id": result.get("trace_id"),
                 "tools_called": result["tools_called"], "tokens": result["tokens"],
                 "stages": cb.stages, "error": result["error"]}
         if result["error"] == "loop_limit":
@@ -202,6 +208,7 @@ def create_app(settings, agent_factory=None, ready_checks=None):
         log.info("ask", extra={**info, "answer_chars": len(result["answer"])})
         return {"request_id": request_id_var.get(), "answer": result["answer"],
                 "tools_called": result["tools_called"], "tokens": result["tokens"],
-                "latency_ms": latency_ms, "stages": cb.stages, "prompt_version": PROMPT_VERSION}
+                "latency_ms": latency_ms, "stages": cb.stages, "prompt_version": PROMPT_VERSION,
+                "trace_id": result.get("trace_id")}
 
     return app
