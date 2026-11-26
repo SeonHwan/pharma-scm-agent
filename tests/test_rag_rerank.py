@@ -1,11 +1,13 @@
+import os
+
 import pytest
 
-# retrieval 의존성 그룹이 없는 환경(운영 이미지, CI)에서는 건너뛴다.
-pytest.importorskip("sentence_transformers")
+from pharma_scm.retrieval import corpus
+from pharma_scm.retrieval.methods import Bm25
+from pharma_scm.retrieval.rerank import Reranker
 
-from pharma_scm.retrieval import corpus  # noqa: E402
-from pharma_scm.retrieval.methods import Bm25  # noqa: E402
-from pharma_scm.retrieval.rerank import Reranker  # noqa: E402
+# 실제 리랭커(약 2GB)를 내려받아 쓰는 시험은 RUN_MODEL_TESTS=1일 때만 돌린다(CI 기본은 건너뜀).
+needs_model = pytest.mark.skipif(not os.environ.get("RUN_MODEL_TESTS"), reason="RUN_MODEL_TESTS=1일 때만 실행")
 
 
 class FakeModel:
@@ -33,6 +35,7 @@ def test_rerank_reorders_head_and_keeps_tail():
     assert got[5:] == order[5:]
 
 
+@needs_model
 def test_real_model_ranks_own_text_first():
     secs = corpus.load_corpus()
     base = Bm25(secs)

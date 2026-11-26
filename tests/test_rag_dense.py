@@ -1,7 +1,10 @@
+import os
+
 import pytest
 
-# retrieval 의존성 그룹이 없는 환경(운영 이미지, CI)에서는 건너뛴다.
-pytest.importorskip("sentence_transformers")
+# 실제 모델(각 약 2GB)을 내려받아 쓰는 시험이라 RUN_MODEL_TESTS=1일 때만 돌린다(CI 기본은 건너뜀).
+if not os.environ.get("RUN_MODEL_TESTS"):
+    pytest.skip("RUN_MODEL_TESTS=1일 때만 실행", allow_module_level=True)
 
 from pharma_scm.retrieval import corpus  # noqa: E402
 from pharma_scm.retrieval.dense import DenseBgeM3  # noqa: E402

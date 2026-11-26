@@ -3,7 +3,7 @@
 검색 벤치마크 전에 환경만 확인하는 시험이다. 코퍼스 섹션 몇 개와 질의 하나를 임베딩해 차원, 장치, 시간을 출력한다.
 처음 실행하면 모델(약 2GB)을 내려받는다. LLM API는 호출하지 않는다.
 
-    uv run --group retrieval python -m pharma_scm.retrieval.embed_check
+    uv run python -m pharma_scm.retrieval.embed_check
 """
 
 import time

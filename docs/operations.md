@@ -69,7 +69,7 @@ curl -s localhost:8000/ask -H "X-API-Key: $PHARMA_API_KEY" -H "Content-Type: app
 |---|---|
 | 날짜·리전·타입 | 2026-11-06, ap-northeast-2(서울), `t4g.small`(arm64, Amazon Linux 2023), EBS gp3 16GB |
 | 가동 시간 | 약 1시간 안팎(정확한 시간은 기록하지 않음). 3시간 자동 종료 설정 |
-| DB 복원 | 행 수 기대와 일치(products 90, sales_orders 180,519, inventory_lots 228, shortage_events 1,622, sop_sections 30) |
+| DB 복원 | 행 수 기대와 일치(products 90, sales_orders 180,519, inventory_lots 228, shortage_events 1,622) |
 | 검증 결과 | `/health` 200, `/ready` ready(3개 체크 ok), 키 없는 `/ask` 401, `/ask`(WH-INC 가용 재고) **정답 189779** |
 | 지연·토큰 | 서버 측 3,403ms, 총 3.48초(SSH 터널 경유), 입력 4,713·출력 214 토큰, LLM 2회·도구 1회 |
 | 실제 비용 | 실제 청구액 없음. 신규 계정의 무료 크레딧(100달러)으로 충당되어 비용이 거의 없다고 판단함. Billing 화면의 정확한 사용액은 확인하지 않음 |

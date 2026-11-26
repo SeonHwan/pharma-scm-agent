@@ -5,7 +5,7 @@
 스레드 수는 Fargate vCPU 수의 근사일 뿐이다(vCPU는 시간을 나눠 쓰고 CPU 종류도 다르다). 0.5 vCPU는 1스레드보다
 느릴 수 있다. LLM API는 호출하지 않는다.
 
-    PHARMA_DEVICE=cpu uv run --group retrieval python -m pharma_scm.retrieval.cpu_check
+    PHARMA_DEVICE=cpu uv run python -m pharma_scm.retrieval.cpu_check
 """
 
 import argparse

@@ -1,8 +1,6 @@
 """에이전트 도구 3개. 각 도구는 문자열(JSON)을 돌려주고, 오류도 예외 대신 문자열로 알려 모델이 고치게 한다."""
 
 import json
-import math
-import re
 from collections import Counter
 from datetime import date, datetime
 from decimal import Decimal
@@ -76,40 +74,16 @@ def run_get_shortage(generic_name, dsn=None):
                   "records_truncated": len(recs) > 10})
 
 
-def _grams(text):
-    t = re.sub(r"\s+", "", text.lower())
-    return [t[i:i + 2] for i in range(len(t) - 1)]
-
-
 @lru_cache(maxsize=1)
-def _sop_index():
-    with psycopg.connect(config.EXT_DSN, connect_timeout=5) as conn:
-        conn.read_only = True
-        rows = conn.execute("SELECT section_id, doc_title, title, body FROM sop_sections "
-                            "ORDER BY section_id").fetchall()
-    docs = [(r, Counter(_grams(f"{r[2]} {r[2]} {r[3]}"))) for r in rows]
-    df = Counter(g for _r, c in docs for g in c)
-    n = len(docs)
-    idf = {g: math.log((n + 1) / (d + 1)) + 1 for g, d in df.items()}
-    vecs = []
-    for r, c in docs:
-        v = {g: tf * idf[g] for g, tf in c.items()}
-        vecs.append((r, v, math.sqrt(sum(x * x for x in v.values()))))
-    return vecs, idf
+def sop_index():
+    """규정 검색 색인(sop/ 문서, R3). 서버 시작 때 한 번 읽는다(api.app.make_real_agent)."""
+    from ..retrieval import index
+
+    return index.load()
 
 
 def run_search_sop(query, k=3):
-    vecs, idf = _sop_index()
-    qv = {g: tf * idf.get(g, 0.0) for g, tf in Counter(_grams(query)).items()}
-    qn = math.sqrt(sum(x * x for x in qv.values())) or 1.0
-    scored = []
-    for r, v, vn in vecs:
-        dot = sum(w * v.get(g, 0.0) for g, w in qv.items())
-        scored.append((dot / (qn * vn) if vn else 0.0, r))
-    scored.sort(key=lambda t: (-t[0], t[1][0]))
-    return _dump({"query": query, "results": [
-        {"section_id": r[0], "doc_title": r[1], "title": r[2], "body": r[3], "score": round(s, 3)}
-        for s, r in scored[:k]]})
+    return _dump({"query": query, "results": sop_index().search(query, k)})
 
 
 @tool
@@ -133,7 +107,8 @@ def get_shortage(generic_name: str):
 @tool
 def search_sop(query: str):
     """SOP(표준작업절차서) 섹션을 검색해 관련도 높은 상위 3개를 돌려준다.
-    보관·유통기한·격리·회수·폐기·발주·결품 대응 등 규정과 절차 질문에 쓴다.
+    입고·보관·유통기한·격리·회수·폐기·발주·결품 대응, 운송·반품·라벨·재고 실사·문서 기록 등
+    물류센터의 규정과 절차 질문에 쓴다.
     각 결과에 section_id가 있다. 근거로 삼은 section_id를 답에 인용한다."""
     return run_search_sop(query)
 

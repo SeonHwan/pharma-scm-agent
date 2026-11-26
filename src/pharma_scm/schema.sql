@@ -76,14 +76,6 @@ CREATE TABLE shortage_events (
 );
 CREATE INDEX ON shortage_events (generic_name);
 
-CREATE TABLE sop_sections (
-    section_id text PRIMARY KEY,
-    doc_id text NOT NULL,
-    doc_title text NOT NULL,
-    title text NOT NULL,
-    body text NOT NULL
-);
-
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'pharma_ro') THEN
@@ -100,6 +92,6 @@ REVOKE ALL ON ALL TABLES IN SCHEMA public FROM pharma_ro, pharma_ext;
 GRANT SELECT ON products, sales_orders, suppliers, purchase_orders, inventory_lots TO pharma_ro;
 ALTER ROLE pharma_ro SET default_transaction_read_only = on;
 ALTER ROLE pharma_ro SET statement_timeout = '5s';
--- get_shortage·search_sop 전용 계정: 결품 스냅샷과 SOP만 읽는다.
+-- get_shortage 전용 계정: 결품 스냅샷만 읽는다(규정 문서는 DB가 아니라 sop/ 파일과 검색 색인에 있다).
 ALTER ROLE pharma_ext SET default_transaction_read_only = on;
 ALTER ROLE pharma_ext SET statement_timeout = '5s';

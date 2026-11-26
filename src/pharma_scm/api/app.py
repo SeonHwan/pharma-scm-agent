@@ -27,6 +27,7 @@ from .. import config
 from ..agent.graph import build_graph
 from ..agent.observability import TimingCallback
 from ..agent.prompt import PROMPT_VERSION
+from ..agent.tools import sop_index
 from ..agent.run import ask
 from .logging_json import request_id_var, setup_logging
 from .ratelimit import RateLimiter
@@ -62,7 +63,11 @@ def default_ready_checks():
 
 
 def make_real_agent():
-    """진짜 에이전트를 만들어 호출 함수 fn(question, callbacks) -> ask() 결과 dict를 돌려준다."""
+    """진짜 에이전트를 만들어 호출 함수 fn(question, callbacks) -> ask() 결과 dict를 돌려준다.
+
+    규정 검색 색인도 여기서 읽어 둔다. 색인이 없거나 문서와 맞지 않으면 첫 요청이 아니라 서버 시작에서 실패한다.
+    """
+    sop_index()
     graph = build_graph()
     return lambda q, cb: ask(q, graph, callbacks=cb)
 

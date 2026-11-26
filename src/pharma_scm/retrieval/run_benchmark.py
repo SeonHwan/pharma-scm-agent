@@ -3,7 +3,7 @@
 LLM API는 호출하지 않는다. 사전 등록 순서상 이 실행은 한 번만 한다: 결과 파일이 이미 있으면 멈추고, 코퍼스나 질의가
 등록된 md5와 다르면 시작하지 않는다. 결과를 본 뒤 코드를 바꿔 다시 돌리려면 그 사실과 이유를 문서에 적어야 한다.
 
-    uv run --group retrieval python -m pharma_scm.retrieval.run_benchmark
+    uv run python -m pharma_scm.retrieval.run_benchmark
 """
 
 import hashlib

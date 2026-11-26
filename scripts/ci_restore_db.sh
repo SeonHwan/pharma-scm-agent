@@ -26,12 +26,11 @@ ALTER ROLE pharma_ext SET statement_timeout = '5s';
 SQL
 
 echo "4) 행 수 확인"
-actual="$(psql_admin -At -F: -c "SELECT 'products', count(*) FROM products UNION ALL SELECT 'sales_orders', count(*) FROM sales_orders UNION ALL SELECT 'inventory_lots', count(*) FROM inventory_lots UNION ALL SELECT 'shortage_events', count(*) FROM shortage_events UNION ALL SELECT 'sop_sections', count(*) FROM sop_sections")"
+actual="$(psql_admin -At -F: -c "SELECT 'products', count(*) FROM products UNION ALL SELECT 'sales_orders', count(*) FROM sales_orders UNION ALL SELECT 'inventory_lots', count(*) FROM inventory_lots UNION ALL SELECT 'shortage_events', count(*) FROM shortage_events")"
 expected="products:90
 sales_orders:180519
 inventory_lots:228
-shortage_events:1622
-sop_sections:30"
+shortage_events:1622"
 echo "$actual"
 [ "$actual" = "$expected" ] || { echo "행 수가 기대값과 다르다" >&2; exit 1; }
 echo "완료"

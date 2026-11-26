@@ -3,6 +3,7 @@ import json
 import numpy as np
 import pytest
 
+from pharma_scm.agent import tools
 from pharma_scm.retrieval import corpus, index
 from pharma_scm.retrieval.register import md5_map
 
@@ -45,3 +46,12 @@ def test_load_rejects_stale_index(tmp_path):
     (tmp_path / index.META).write_text(json.dumps(meta), encoding="utf-8")
     with pytest.raises(RuntimeError):
         index.load(tmp_path, embed_query=embed)
+
+
+def test_search_sop_tool_uses_index(monkeypatch):
+    sections, vectors, embed = fake_index()
+    monkeypatch.setattr(tools, "sop_index", lambda: index.SopIndex(sections, vectors, embed))
+    got = json.loads(tools.run_search_sop("냉장 보관 온도 기록 SOP-02-1"))
+    assert got["query"] == "냉장 보관 온도 기록 SOP-02-1"
+    assert [r["section_id"] for r in got["results"]][0] == "SOP-02-1"
+    assert len(got["results"]) == 3

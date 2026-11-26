@@ -9,7 +9,9 @@ dependencies = [
     "langgraph==1.2.19",
     "psycopg[binary]==3.2.9",
     "python-dotenv==1.2.4",
+    "sentence-transformers==6.3.0",
     "sqlglot==30.27.0",
+    "torch==2.15.0",
     "uvicorn==0.54.0",
 ]
 
@@ -22,9 +24,6 @@ dev = [
 gen = [
     "openai==3.59.0",
 ]
-retrieval = [
-    "sentence-transformers==6.3.0",
-]
 
 [build-system]
 requires = ["uv_build>=0.12.23,<0.13.0"]
@@ -35,6 +34,15 @@ line-length = 100
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+# 운영(Fargate)에는 GPU가 없어서 PyTorch는 CPU 빌드를 쓴다(CUDA 빌드는 수 GB가 더 크다).
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 [tool.uv.build-backend]
 module-name = "pharma_scm"

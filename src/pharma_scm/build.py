@@ -3,10 +3,10 @@
 
 import psycopg
 
-from . import config, load_dataco, load_openfda, sop, synth
+from . import config, load_dataco, load_openfda, synth
 
 _TABLES = ["suppliers", "products", "sales_orders", "inventory_lots", "purchase_orders",
-           "shortage_events", "sop_sections"]
+           "shortage_events"]
 
 
 def checksums(conn):
@@ -38,12 +38,11 @@ def main():
                             synth.lots(prods))
             cur.executemany("INSERT INTO purchase_orders VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
                             synth.purchase_orders(prods))
-        sop.load(conn)
         conn.execute("INSERT INTO meta VALUES ('as_of', %s), ('shortage_snapshot', %s)",
                      (config.AS_OF.isoformat(), config.SHORTAGE_SNAPSHOT))
         conn.execute("GRANT SELECT ON products, sales_orders, suppliers, purchase_orders, "
                      "inventory_lots TO pharma_ro")
-        conn.execute("GRANT SELECT ON shortage_events, sop_sections TO pharma_ext")
+        conn.execute("GRANT SELECT ON shortage_events TO pharma_ext")
         sums = checksums(conn)
     for t, (n, h) in sums.items():
         print(f"{t:16s} {n:>7d}  {h}")

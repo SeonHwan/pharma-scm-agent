@@ -41,6 +41,6 @@ ALTER ROLE pharma_ext SET default_transaction_read_only = on;
 ALTER ROLE pharma_ext SET statement_timeout = '5s';
 SQL
 
-echo "5) 확인: 행 수(기대: products 90, sales_orders 180519, inventory_lots 228, shortage_events 1622, sop_sections 30)"
-psql_admin -At -c "SELECT 'products', count(*) FROM products UNION ALL SELECT 'sales_orders', count(*) FROM sales_orders UNION ALL SELECT 'inventory_lots', count(*) FROM inventory_lots UNION ALL SELECT 'shortage_events', count(*) FROM shortage_events UNION ALL SELECT 'sop_sections', count(*) FROM sop_sections"
+echo "5) 확인: 행 수(기대: products 90, sales_orders 180519, inventory_lots 228, shortage_events 1622)"
+psql_admin -At -c "SELECT 'products', count(*) FROM products UNION ALL SELECT 'sales_orders', count(*) FROM sales_orders UNION ALL SELECT 'inventory_lots', count(*) FROM inventory_lots UNION ALL SELECT 'shortage_events', count(*) FROM shortage_events"
 echo "완료"
