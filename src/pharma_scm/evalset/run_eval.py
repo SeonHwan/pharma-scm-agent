@@ -19,6 +19,7 @@ from datetime import datetime
 
 from .. import config
 from ..agent.graph import MAX_TOOL_ROUNDS, PROMPT_CACHE, build_graph
+from ..agent.multi import build_multi_graph
 from ..agent.prompt import PROMPT_SHA, PROMPT_VERSION
 from ..agent import tracing
 from ..agent.run import ask
@@ -27,7 +28,8 @@ from .grader import grade
 QUESTIONS = config.ROOT / "eval" / "questions.jsonl"
 QUESTION_SETS = {"v1": QUESTIONS, "v2": config.ROOT / "eval" / "questions_v2.jsonl",
                  "v3_pilot": config.ROOT / "eval" / "questions_v3_pilot.jsonl",
-                 "v3_pilot2": config.ROOT / "eval" / "questions_v3_pilot2.jsonl"}
+                 "v3_pilot2": config.ROOT / "eval" / "questions_v3_pilot2.jsonl",
+                 "v3": config.ROOT / "eval" / "questions_v3.jsonl"}
 RESULT_CLIP = 2000
 
 
@@ -63,11 +65,11 @@ def count_problems(results):
     return errors, fmt_bad
 
 
-def run_one(q, graph, out_dir, run_id=None, qset="v1"):
+def run_one(q, graph, out_dir, run_id=None, qset="v1", arch="S"):
     trace = {"name": "eval", "external_id": f"{run_id}:{q['id']}", "session_id": run_id,
-             "tags": ["eval", qset, q["type"]],
+             "tags": ["eval", qset, q["type"], f"arch_{arch}"],
              "metadata": {"eval_run_id": run_id, "question_id": q["id"], "question_type": q["type"],
-                          "split": q.get("split")}}
+                          "split": q.get("split"), "arch": arch}}
     try:
         r = ask(q["question"], graph, trace=trace)
     except Exception as e:  # 한 문항의 실패가 전체 실행을 멈추지 않게 한다
@@ -95,6 +97,8 @@ def main(argv=None):
     ap.add_argument("--strict", action="store_true", help="실행 오류 문항이 있으면 종료코드 1")
     ap.add_argument("--set", dest="qset", choices=sorted(QUESTION_SETS), default="v1", help="평가셋 버전")
     ap.add_argument("--split", choices=["dev", "test"], default=None, help="v2의 dev/test 절반만 실행")
+    ap.add_argument("--arch", choices=["S", "M"], default="S",
+                    help="S: 단일 에이전트, M: 감독+전문가 3 멀티 에이전트(docs/multi_agent_protocol.md)")
     a = ap.parse_args(argv)
     if a.split and a.qset == "v1":
         ap.error("--split은 --set v2에서만 쓴다")
@@ -107,7 +111,7 @@ def main(argv=None):
         qs = [q for q in qs if q["split"] == a.split]
     out_dir = config.ROOT / "data" / "runs" / a.run_id
     todo = [q for q in qs if not (out_dir / f"{q['id']}.json").exists()]
-    print(f"run_id={a.run_id} 프롬프트 {PROMPT_VERSION} {PROMPT_SHA} 모델 {config.AGENT_MODEL}")
+    print(f"run_id={a.run_id} 구조 {a.arch} 프롬프트 {PROMPT_VERSION} {PROMPT_SHA} 모델 {config.AGENT_MODEL}")
     print(f"문항 {len(qs)}개 중 실행할 것 {len(todo)}개 (이미 있는 {len(qs) - len(todo)}개는 건너뜀)")
     print(f"예상 LLM 호출 {len(todo) * 2}~{len(todo) * 3}회 (스모크 평균 1.8회/문항), "
           f"상한 {len(todo) * (MAX_TOOL_ROUNDS + 1)}회")
@@ -120,13 +124,13 @@ def main(argv=None):
         meta.write_text(json.dumps({
             "run_id": a.run_id, "prompt_version": PROMPT_VERSION, "prompt_sha": PROMPT_SHA,
             "model": config.AGENT_MODEL, "started": datetime.now().isoformat(timespec="seconds"),
-            "question_set": a.qset, "split": a.split, "prompt_cache": PROMPT_CACHE,
+            "question_set": a.qset, "split": a.split, "prompt_cache": PROMPT_CACHE, "arch": a.arch,
             "questions_md5": hashlib.md5(QUESTION_SETS[a.qset].read_bytes()).hexdigest()}, indent=1))
-    graph = build_graph()
+    graph = build_multi_graph() if a.arch == "M" else build_graph()
     done = 0
     results = []
     with ThreadPoolExecutor(a.workers) as ex:
-        for r in ex.map(lambda q: run_one(q, graph, out_dir, a.run_id, a.qset), todo):
+        for r in ex.map(lambda q: run_one(q, graph, out_dir, a.run_id, a.qset, a.arch), todo):
             done += 1
             results.append(r)
             g = r["grade"]

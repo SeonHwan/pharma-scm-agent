@@ -31,23 +31,24 @@ def make_llm():
                          timeout=60, max_retries=2)
 
 
-def system_message(cache=PROMPT_CACHE):
+def system_message(cache=PROMPT_CACHE, text=SYSTEM_PROMPT):
     if not cache:
-        return SystemMessage(SYSTEM_PROMPT)
-    return SystemMessage([{"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}])
+        return SystemMessage(text)
+    return SystemMessage([{"type": "text", "text": text, "cache_control": {"type": "ephemeral"}}])
 
 
-def build_graph(llm=None):
+def build_graph(llm=None, system_prompt=SYSTEM_PROMPT, tools=TOOLS):
+    """agent ⇄ tools 루프. 기본은 단일 에이전트(도구 3개). 멀티 에이전트(multi.py)는 프롬프트와 도구를 바꿔 같은 루프를 쓴다."""
     llm = llm or make_llm()
-    bound = llm.bind_tools(TOOLS)
-    system = system_message()
+    bound = llm.bind_tools(tools)
+    system = system_message(text=system_prompt)
 
     def agent(state):
         return {"messages": [bound.invoke([system, *state["messages"]])]}
 
     g = StateGraph(MessagesState)
     g.add_node("agent", agent)
-    g.add_node("tools", ToolNode(TOOLS))
+    g.add_node("tools", ToolNode(tools))
     g.add_edge(START, "agent")
     g.add_conditional_edges("agent", tools_condition)
     g.add_edge("tools", "agent")

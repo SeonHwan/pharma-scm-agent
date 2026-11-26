@@ -63,3 +63,28 @@ def test_ask_with_tracing_passes_metadata_and_trace_id(monkeypatch):
 
 def test_score_grade_is_noop_when_disabled():
     tracing.score_grade("0" * 32, {"pass": True, "reason": "", "format_ok": True, "tool_exact": None})
+
+
+def test_multi_agent_counts_specialist_calls_and_tools(monkeypatch):
+    """감독이 결품 담당에게 맡기고, 결품 담당이 get_shortage를 부르는 흐름(가짜 모델). 전문가 안의 LLM 호출과 도구가 집계된다."""
+    from pharma_scm.agent import multi
+
+    sup = FakeChat(script=[
+        AIMessage("", tool_calls=[{"id": "t1", "name": "ask_shortage_specialist", "args": {"task": "A 성분 상태"}}]),
+        AIMessage("A는 결품 중\n최종 답: 결품 중"),
+    ])
+    spec = FakeChat(script=[AIMessage("A: 결품 중(3)")])
+
+    calls = {"n": 0}
+
+    def fake_build(llm=None, system_prompt=None, tools=None):
+        calls["n"] += 1
+        return build_graph(sup if system_prompt == multi.SUPERVISOR_PROMPT else spec, system_prompt, tools)
+
+    monkeypatch.setattr(multi, "build_graph", fake_build)
+    g = multi.build_multi_graph(llm=object())
+    r = run.ask("A 성분 결품 상태?", g)
+    assert calls["n"] == 4  # 전문가 3 + 감독 1
+    assert r["answer"].endswith("최종 답: 결품 중")
+    assert r["delegations"] == ["ask_shortage_specialist"] and r["tools_called"] == []
+    assert r["tokens"]["llm_calls"] == 3  # 감독 2 + 결품 담당 1
