@@ -67,12 +67,13 @@ def quantize_int8(model):
 
 
 def query_int8_enabled():
-    return os.environ.get("PHARMA_QUERY_INT8") == "1"
+    """기본은 켠다(Fargate 1 vCPU p95 1358ms → 236ms, docs/rag_eval_results.md §13). PHARMA_QUERY_INT8=0이면 fp32."""
+    return os.environ.get("PHARMA_QUERY_INT8", "1") != "0"
 
 
 def model_embedder(int8=None):
     """bge-m3로 질의 하나를 정규화 벡터로 만드는 함수. 이미지에는 모델이 미리 들어 있다.
-    int8이면 질의 쪽 모델만 양자화한다(섹션 벡터는 빌드 때의 fp32). 기본은 PHARMA_QUERY_INT8 환경변수."""
+    int8이면 질의 쪽 모델만 양자화한다(섹션 벡터는 빌드 때의 fp32). 기본은 query_int8_enabled()."""
     model = load_dense("cpu")
     if int8 is None:
         int8 = query_int8_enabled()
