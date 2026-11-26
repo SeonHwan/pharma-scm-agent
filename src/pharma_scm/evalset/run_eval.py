@@ -25,7 +25,9 @@ from ..agent.run import ask
 from .grader import grade
 
 QUESTIONS = config.ROOT / "eval" / "questions.jsonl"
-QUESTION_SETS = {"v1": QUESTIONS, "v2": config.ROOT / "eval" / "questions_v2.jsonl"}
+QUESTION_SETS = {"v1": QUESTIONS, "v2": config.ROOT / "eval" / "questions_v2.jsonl",
+                 "v3_pilot": config.ROOT / "eval" / "questions_v3_pilot.jsonl",
+                 "v3_pilot2": config.ROOT / "eval" / "questions_v3_pilot2.jsonl"}
 RESULT_CLIP = 2000
 
 

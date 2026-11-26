@@ -70,6 +70,41 @@ def grade_answer(q, answer_text):
         got = set(_SEC.findall(fin))
         ok = g["value"] in got and len(got) <= 2
         return ok, "" if ok else f"섹션 불일치 got={sorted(got)} gold={g['value']}"
+    # 평가셋 v3(docs/multi_agent_protocol.md): 여러 도구를 합치는 문항과 문서 모순 문항
+    if kind == "set_section":
+        got_skus, got_secs = set(_SKU.findall(fin)), set(_SEC.findall(fin))
+        ok_set = got_skus == set(g["value"]["skus"])
+        ok_sec = g["value"]["section"] in got_secs and len(got_secs) <= 2
+        return ok_set and ok_sec, "" if ok_set and ok_sec else (
+            f"집합 {'일치' if ok_set else '불일치'} got={sorted(got_skus)}, 섹션 got={sorted(got_secs)}")
+    if kind == "number_section":
+        got_secs = set(_SEC.findall(fin))
+        nums = _numbers(_SEC.sub(" ", fin))  # 섹션 id 안의 숫자는 빼고 센다
+        if len(nums) != 1:
+            return False, f"format: 숫자 {len(nums)}개"
+        ok_num = _num_ok(nums[0], g["value"]["number"])
+        ok_sec = g["value"]["section"] in got_secs and len(got_secs) <= 2
+        return ok_num and ok_sec, "" if ok_num and ok_sec else f"숫자 got={nums[0]}, 섹션 got={sorted(got_secs)}"
+    if kind == "sections_conflict":
+        got = set(_SEC.findall(fin))
+        need, allowed = set(g["value"]["required"]), set(g["value"]["required"]) | set(g["value"]["allowed"])
+        ok = need <= got and got <= allowed
+        return ok, "" if ok else f"모순 섹션 got={sorted(got)} 필요={sorted(need)}"
+    if kind == "status_counts":
+        got = {}
+        for lab in STATUS_LABELS:
+            m = re.search(re.escape(lab) + r"\s*[:：]?\s*(\d[\d,]*)", fin)
+            if m:
+                got[lab] = int(m.group(1).replace(",", ""))
+        ok = got == g["value"]
+        return ok, "" if ok else f"상태별 개수 got={got}"
+    if kind == "sku_number":
+        got_skus = set(_SKU.findall(fin))
+        nums = _numbers(_SKU.sub(" ", fin))  # SKU id 안의 숫자는 빼고 센다
+        if len(nums) != 1:
+            return False, f"format: 숫자 {len(nums)}개"
+        ok = got_skus == set(g["value"]["skus"]) and _num_ok(nums[0], g["value"]["number"])
+        return ok, "" if ok else f"got={sorted(got_skus)}, {nums[0]}"
     raise ValueError(kind)
 
 
