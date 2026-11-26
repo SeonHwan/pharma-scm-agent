@@ -10,6 +10,8 @@ import resource
 import statistics
 import time
 
+import torch
+
 from . import index
 
 QUERIES = [
@@ -41,7 +43,8 @@ def main():
     ms.sort()
     p95 = ms[max(0, round(0.95 * len(ms)) - 1)]
     rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
-    print(f"모델+색인 로드 {load_s:.1f}초, 질의 {len(ms)}회 p50 {statistics.median(ms):.0f}ms p95 {p95:.0f}ms, "
+    mode = "int8" if index.query_int8_enabled() else "fp32"
+    print(f"질의 임베딩 {mode}, torch 스레드 {torch.get_num_threads()}, 모델+색인 로드 {load_s:.1f}초, 질의 {len(ms)}회 p50 {statistics.median(ms):.0f}ms p95 {p95:.0f}ms, "
           f"이 프로세스 최대 메모리 {rss:,.0f}MB")
 
 

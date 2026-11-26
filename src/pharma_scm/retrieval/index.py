@@ -8,6 +8,7 @@
 """
 
 import json
+import os
 
 import numpy as np
 
@@ -53,14 +54,35 @@ class SopIndex:
         return out
 
 
-def model_embedder():
-    """bge-m3로 질의 하나를 정규화 벡터로 만드는 함수. 이미지에는 모델이 미리 들어 있다."""
+def quantize_int8(model):
+    """질의 임베딩용으로 Linear 층을 그 자리에서 int8 동적 양자화한다(docs/rag_eval_results.md §12).
+    사본을 만들면 fp32 원본과 함께 메모리에 남아 약 5.8GB가 되므로 inplace로 바꾼다."""
+    import warnings
+
+    import torch
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")  # torch.ao.quantization 폐기 예정 경고(§12 한계에 적음)
+        return torch.ao.quantization.quantize_dynamic(model, {torch.nn.Linear}, dtype=torch.qint8, inplace=True)
+
+
+def query_int8_enabled():
+    return os.environ.get("PHARMA_QUERY_INT8") == "1"
+
+
+def model_embedder(int8=None):
+    """bge-m3로 질의 하나를 정규화 벡터로 만드는 함수. 이미지에는 모델이 미리 들어 있다.
+    int8이면 질의 쪽 모델만 양자화한다(섹션 벡터는 빌드 때의 fp32). 기본은 PHARMA_QUERY_INT8 환경변수."""
     model = load_dense("cpu")
+    if int8 is None:
+        int8 = query_int8_enabled()
+    if int8:
+        model = quantize_int8(model)
     return model, lambda q: model.encode([q], normalize_embeddings=True, show_progress_bar=False)[0]
 
 
 def build(out_dir=INDEX_DIR):
-    model, _ = model_embedder()
+    model, _ = model_embedder(int8=False)  # 섹션 벡터는 항상 fp32
     sections = load_corpus()
     vectors = model.encode([section_text(s) for s in sections], batch_size=16,
                            normalize_embeddings=True, show_progress_bar=False)
