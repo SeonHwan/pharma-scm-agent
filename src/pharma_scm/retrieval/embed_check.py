@@ -14,8 +14,16 @@ MODEL = "BAAI/bge-m3"
 
 
 def pick_device():
-    """GPU가 실제로 계산되는지 확인하고, 안 되면 CPU를 쓴다(최신 GPU는 PyTorch 빌드가 맞아야 한다)."""
+    """GPU가 실제로 계산되는지 확인하고, 안 되면 CPU를 쓴다(최신 GPU는 PyTorch 빌드가 맞아야 한다).
+
+    환경변수 PHARMA_DEVICE=cpu면 GPU가 있어도 CPU를 쓴다(GPU 없는 운영 환경을 가정한 측정용).
+    """
+    import os
+
     import torch
+
+    if os.environ.get("PHARMA_DEVICE") == "cpu":
+        return "cpu"
 
     if torch.cuda.is_available():
         try:
