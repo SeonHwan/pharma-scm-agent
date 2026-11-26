@@ -3,9 +3,10 @@
 이미 결과 파일이 있는 문항은 건너뛴다(중단 후 이어서 실행). 결과를 보고 프롬프트를 바꾸면
 PROMPT_VERSION을 올리고 새 run_id로 돌린다 — 기존 결과를 덮어쓰지 않는다.
 실행: uv run python -m pharma_scm.evalset.run_eval [--dry-run] [--run-id ID] [--workers N]
-      [--ids A001,B002 ...] [--sha 커밋해시] [--strict]
+      [--ids A001,B002 ...] [--sha 커밋해시] [--strict] [--set v1|v2] [--split dev|test]
 --ids로 일부 문항만, --sha로 run_id에 커밋 해시를 넣어 옛 결과 재사용을 막는다(기본 run_id는 main_<버전>).
 --strict는 실행 중 예외로 실패한 문항이 있으면 종료코드 1로 끝낸다(스모크·CI용). 기본은 항상 0.
+--set v2는 평가셋 v2(eval/questions_v2.jsonl, docs/eval_v2_protocol.md), --split은 v2의 dev/test 절반만 고른다.
 """
 
 import argparse
@@ -23,11 +24,12 @@ from ..agent.run import ask
 from .grader import grade
 
 QUESTIONS = config.ROOT / "eval" / "questions.jsonl"
+QUESTION_SETS = {"v1": QUESTIONS, "v2": config.ROOT / "eval" / "questions_v2.jsonl"}
 RESULT_CLIP = 2000
 
 
-def load_questions():
-    return [json.loads(x) for x in QUESTIONS.read_text(encoding="utf-8").splitlines()]
+def load_questions(qset="v1"):
+    return [json.loads(x) for x in QUESTION_SETS[qset].read_text(encoding="utf-8").splitlines()]
 
 
 def parse_ids(text):
@@ -46,8 +48,9 @@ def select_questions(qs, ids):
     return [q for q in qs if q["id"] in want]
 
 
-def default_run_id(sha):
-    return f"main_{PROMPT_VERSION}_{sha[:8]}" if sha else f"main_{PROMPT_VERSION}"
+def default_run_id(sha, qset="v1"):
+    prefix = "main" if qset == "v1" else qset
+    return f"{prefix}_{PROMPT_VERSION}_{sha[:8]}" if sha else f"{prefix}_{PROMPT_VERSION}"
 
 
 def count_problems(results):
@@ -82,12 +85,18 @@ def main(argv=None):
     ap.add_argument("--ids", default=None, help="실행할 문항 ID(쉼표·공백 구분). 없으면 전체")
     ap.add_argument("--sha", default=None, help="run_id에 넣을 커밋 해시")
     ap.add_argument("--strict", action="store_true", help="실행 오류 문항이 있으면 종료코드 1")
+    ap.add_argument("--set", dest="qset", choices=sorted(QUESTION_SETS), default="v1", help="평가셋 버전")
+    ap.add_argument("--split", choices=["dev", "test"], default=None, help="v2의 dev/test 절반만 실행")
     a = ap.parse_args(argv)
-    a.run_id = a.run_id or default_run_id(a.sha)
+    if a.split and a.qset == "v1":
+        ap.error("--split은 --set v2에서만 쓴다")
+    a.run_id = a.run_id or default_run_id(a.sha, a.qset)
     try:
-        qs = select_questions(load_questions(), None if a.ids is None else parse_ids(a.ids))
+        qs = select_questions(load_questions(a.qset), None if a.ids is None else parse_ids(a.ids))
     except ValueError as e:
         ap.error(str(e))
+    if a.split:
+        qs = [q for q in qs if q["split"] == a.split]
     out_dir = config.ROOT / "data" / "runs" / a.run_id
     todo = [q for q in qs if not (out_dir / f"{q['id']}.json").exists()]
     print(f"run_id={a.run_id} 프롬프트 {PROMPT_VERSION} {PROMPT_SHA} 모델 {config.AGENT_MODEL}")
@@ -103,7 +112,8 @@ def main(argv=None):
         meta.write_text(json.dumps({
             "run_id": a.run_id, "prompt_version": PROMPT_VERSION, "prompt_sha": PROMPT_SHA,
             "model": config.AGENT_MODEL, "started": datetime.now().isoformat(timespec="seconds"),
-            "questions_md5": hashlib.md5(QUESTIONS.read_bytes()).hexdigest()}, indent=1))
+            "question_set": a.qset, "split": a.split,
+            "questions_md5": hashlib.md5(QUESTION_SETS[a.qset].read_bytes()).hexdigest()}, indent=1))
     graph = build_graph()
     done = 0
     results = []
