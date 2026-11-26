@@ -46,6 +46,6 @@ variable "desired_count" {
 # 값은 `gh api repos/소유자/저장소/actions/oidc/customization/sub`의 sub_claim_prefix에서 "repo:" 뒤를 가져온다.
 variable "github_subject" {
   type        = string
-  default     = "SeonHwan@60860713/pharma-scm-agent@1443635374"
+  default     = "SeonHwan@60860713/pharma-scm-agent@1473726648"
   description = "배포 역할을 맡을 수 있는 GitHub 저장소의 sub 표기(불변 형식)"
 }
