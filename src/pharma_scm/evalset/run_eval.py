@@ -18,7 +18,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 
 from .. import config
-from ..agent.graph import MAX_TOOL_ROUNDS, build_graph
+from ..agent.graph import MAX_TOOL_ROUNDS, PROMPT_CACHE, build_graph
 from ..agent.prompt import PROMPT_SHA, PROMPT_VERSION
 from ..agent.run import ask
 from .grader import grade
@@ -66,7 +66,7 @@ def run_one(q, graph, out_dir):
     except Exception as e:  # 한 문항의 실패가 전체 실행을 멈추지 않게 한다
         r = {"question": q["question"], "answer": None, "tool_calls": [], "tools_called": [],
              "tokens": {"input": 0, "output": 0, "llm_calls": 0}, "latency_s": None,
-             "error": f"exception:{type(e).__name__}:{str(e)[:200]}",
+             "error": f"exception:{type(e).__name__}:{str(e)[:200]}", "prompt_cache": PROMPT_CACHE,
              "prompt_version": PROMPT_VERSION, "prompt_sha": PROMPT_SHA}
     for c in r["tool_calls"]:
         c["result"] = (c.get("result") or "")[:RESULT_CLIP]
@@ -112,7 +112,7 @@ def main(argv=None):
         meta.write_text(json.dumps({
             "run_id": a.run_id, "prompt_version": PROMPT_VERSION, "prompt_sha": PROMPT_SHA,
             "model": config.AGENT_MODEL, "started": datetime.now().isoformat(timespec="seconds"),
-            "question_set": a.qset, "split": a.split,
+            "question_set": a.qset, "split": a.split, "prompt_cache": PROMPT_CACHE,
             "questions_md5": hashlib.md5(QUESTION_SETS[a.qset].read_bytes()).hexdigest()}, indent=1))
     graph = build_graph()
     done = 0

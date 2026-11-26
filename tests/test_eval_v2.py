@@ -48,3 +48,18 @@ def test_split_option_requires_v2():
 
     with pytest.raises(SystemExit):
         run_eval.main(["--split", "dev", "--dry-run"])
+
+
+def test_input_cost_counts_cache_parts():
+    tk = {"input": 1_000_000, "cache_read": 600_000, "cache_write": 100_000}
+    # 캐시 안 된 30만 x $2 + 쓰기 10만 x $2.5 + 읽기 60만 x $0.2
+    assert abs(report_v2.input_cost(tk) - (0.6 + 0.25 + 0.12)) < 1e-9
+
+
+def test_system_message_has_cache_marker():
+    from pharma_scm.agent.graph import system_message
+    from pharma_scm.agent.prompt import SYSTEM_PROMPT
+
+    block = system_message(cache=True).content[0]
+    assert block["text"] == SYSTEM_PROMPT and block["cache_control"] == {"type": "ephemeral"}
+    assert system_message(cache=False).content == SYSTEM_PROMPT

@@ -10,6 +10,9 @@ from .prompt import SYSTEM_PROMPT
 from .tools import TOOLS
 
 MAX_TOOL_ROUNDS = 8
+# 도구 정의와 시스템 프롬프트는 모든 호출에서 같으므로 캐시한다(5분). 캐시는 도구 → 시스템 순서의 앞부분이라
+# 시스템 블록 끝에 표시를 두면 둘 다 캐시된다. 캐시에서 읽은 입력은 단가가 1/10이다(docs/eval_v2_protocol.md §8-1).
+PROMPT_CACHE = True
 # agent→tools 한 번이 2 step. 마지막 agent 호출 1 step을 더한다.
 RECURSION_LIMIT = MAX_TOOL_ROUNDS * 2 + 1
 
@@ -24,12 +27,19 @@ def make_llm():
                          timeout=60, max_retries=2)
 
 
+def system_message(cache=PROMPT_CACHE):
+    if not cache:
+        return SystemMessage(SYSTEM_PROMPT)
+    return SystemMessage([{"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}])
+
+
 def build_graph(llm=None):
     llm = llm or make_llm()
     bound = llm.bind_tools(TOOLS)
+    system = system_message()
 
     def agent(state):
-        return {"messages": [bound.invoke([SystemMessage(SYSTEM_PROMPT), *state["messages"]])]}
+        return {"messages": [bound.invoke([system, *state["messages"]])]}
 
     g = StateGraph(MessagesState)
     g.add_node("agent", agent)
