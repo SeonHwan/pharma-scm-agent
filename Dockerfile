@@ -8,22 +8,27 @@ WORKDIR /app
 RUN useradd --system --create-home --uid 10001 app
 
 # 의존성 레이어(소스가 바뀌어도 캐시 유지). PyTorch는 CPU 빌드다(pyproject.toml의 pytorch-cpu 저장소).
+# uv 다운로드 캐시는 빌드 캐시 마운트에 두어 이미지에 남기지 않는다(남기면 약 1.2GB가 더 든다).
 COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-dev --no-install-project
+RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen --no-dev --no-install-project
 
 # 임베딩 모델 레이어(bge-m3, 고정 리비전, 필요한 파일만 약 2.3GB). 이 파일 하나만 복사해서 실행하므로
 # 다른 소스가 바뀌어도 이 레이어는 캐시된다.
 COPY src/pharma_scm/retrieval/models.py /tmp/models.py
-RUN uv run --no-sync python /tmp/models.py && rm /tmp/models.py
+# 내려받은 캐시 파일 일부가 root 전용(600)이라, 실행 사용자(app)도 읽을 수 있게 권한을 연다.
+RUN uv run --no-sync python /tmp/models.py && rm /tmp/models.py && chmod -R a+rX /opt/hf
 
 COPY src ./src
 COPY sop ./sop
-RUN uv sync --frozen --no-dev
+RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen --no-dev
 # 규정 검색 색인(섹션 벡터)을 빌드 때 만든다. 서버는 시작할 때 읽기만 하고, 문서와 맞지 않으면 시작하지 않는다.
 RUN uv run --no-sync python -m pharma_scm.retrieval.index
 
 # 실행 중에는 모델 저장소에 접속하지 않는다(모델은 이미지에 있다).
 ENV HF_HUB_OFFLINE=1
+# PyTorch는 컨테이너 밖 호스트의 코어 수(예: 16)만큼 스레드를 띄우는데, CPU 할당량이 0.5~1 vCPU면 스레드들이
+# 할당량을 순식간에 다 쓰고 멈춰서 질의 하나가 4.5초까지 걸렸다(docs/rag_eval_results.md §9). 1개로 고정한다.
+ENV OMP_NUM_THREADS=1
 USER app
 EXPOSE 8000
 # 시작 때 모델과 색인을 읽으므로 start-period를 넉넉히 둔다.

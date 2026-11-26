@@ -14,6 +14,9 @@ DENSE_REVISION = "5617a9f61b028005a4858fdac845db406aefb181"
 RERANK_MODEL = "BAAI/bge-reranker-v2-m3"  # 벤치마크 R4 전용(운영에서는 쓰지 않는다)
 # sentence-transformers가 쓰지 않는 파일(ONNX 변환본, 희소·ColBERT 헤드, 그림)은 받지 않는다.
 SKIP_FILES = ["onnx/*", "*.pt", "*.jpg", "imgs/*", "README.md"]
+# transformers는 .bin 가중치를 읽으면 백그라운드에서 safetensors 변환본(고정되지 않은 PR 리비전, 2.27GB)을
+# 한 벌 더 받는다. 쓰지 않는 파일이고 이미지·CI 캐시를 두 배로 키우므로 끈다.
+os.environ.setdefault("DISABLE_SAFETENSORS_CONVERSION", "1")
 
 
 def pick_device():
