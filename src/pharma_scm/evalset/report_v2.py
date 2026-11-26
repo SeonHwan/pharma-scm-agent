@@ -2,12 +2,14 @@
 
     uv run python -m pharma_scm.evalset.report_v2 <run_id>                 # 한 실행 집계
     uv run python -m pharma_scm.evalset.report_v2 <기준 run_id> <개선 run_id> [--split test]   # 짝지은 비교
+    uv run python -m pharma_scm.evalset.report_v2 <S run_id> <M run_id> --set v3                # 멀티 에이전트 비교
 
 비교는 두 실행에 모두 있는 문항만 쓴다. 정답률 차이는 McNemar 정확 검정(엇갈린 문항 수에 대한 양측 이항 검정)으로 본다.
 """
 
 import argparse
 import json
+import statistics
 from math import comb
 
 from .. import config
@@ -30,6 +32,7 @@ def tokens(rs):
     t = [r["tokens"] for r in rs]
     out = {k: sum(x.get(k, 0) for x in t) for k in ("llm_calls", "input", "output", "cache_read", "cache_write")}
     out["input_cost"] = input_cost(out)
+    out["total_cost"] = out["input_cost"] + out["output"] * PRICE["output"] / 1e6
     return out
 
 
@@ -87,8 +90,9 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("runs", nargs="+", help="run_id 하나(집계) 또는 둘(기준, 개선 비교)")
     ap.add_argument("--split", choices=["dev", "test"], default=None)
+    ap.add_argument("--set", dest="qset", default="v2", help="평가셋(v2, v3 등). v3는 멀티 에이전트 비교(docs/multi_agent_protocol.md)")
     a = ap.parse_args(argv)
-    qs = {q["id"]: q for q in load_questions("v2")}
+    qs = {q["id"]: q for q in load_questions(a.qset)}
     if len(a.runs) == 1:
         print_summary(a.runs[0], summarize(load_run(a.runs[0]), qs, a.split))
         return
@@ -105,6 +109,14 @@ def main(argv=None):
     if tin_b:
         print(f"  입력 토큰 {tin_b:,} → {tin_n:,} ({(tin_n - tin_b) / tin_b * 100:+.1f}%), "
               f"입력 비용 ${cb:.3f} → ${cn:.3f} ({(cn - cb) / cb * 100:+.1f}%)")
+    tb, tn = c["tokens_base"], c["tokens_new"]
+    print(f"  전체 비용(입력+출력) ${tb['total_cost']:.3f} → ${tn['total_cost']:.3f} "
+          f"({(tn['total_cost'] - tb['total_cost']) / tb['total_cost'] * 100:+.1f}%), "
+          f"LLM 호출 {tb['llm_calls']} → {tn['llm_calls']}")
+    lat = {k: sorted(r["latency_s"] for i, r in run.items() if i in qs and r["latency_s"] is not None)
+           for k, run in (("base", base), ("new", new))}
+    if lat["base"] and lat["new"]:
+        print(f"  지연 중앙값 {statistics.median(lat['base']):.1f}s → {statistics.median(lat['new']):.1f}s")
     print(f"  기준만 맞음: {', '.join(c['only_base']) or '없음'}")
     print(f"  개선만 맞음: {', '.join(c['only_new']) or '없음'}")
 
