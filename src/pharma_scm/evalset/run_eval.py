@@ -113,8 +113,13 @@ def main(argv=None):
     todo = [q for q in qs if not (out_dir / f"{q['id']}.json").exists()]
     print(f"run_id={a.run_id} 구조 {a.arch} 프롬프트 {PROMPT_VERSION} {PROMPT_SHA} 모델 {config.AGENT_MODEL}")
     print(f"문항 {len(qs)}개 중 실행할 것 {len(todo)}개 (이미 있는 {len(qs) - len(todo)}개는 건너뜀)")
-    print(f"예상 LLM 호출 {len(todo) * 2}~{len(todo) * 3}회 (스모크 평균 1.8회/문항), "
-          f"상한 {len(todo) * (MAX_TOOL_ROUNDS + 1)}회")
+    if a.arch == "M":
+        # 멀티 에이전트는 전문가 호출이 더해진다. 평가셋 v3에서 단일 109회 대비 351회(약 3.2배)였다(docs/multi_agent_results.md).
+        print(f"예상 LLM 호출 {len(todo) * 6}~{len(todo) * 12}회 (v3 실측 평균 11.7회/문항), "
+              f"상한은 감독 기준 {len(todo) * (MAX_TOOL_ROUNDS + 1)}회에 전문가 호출이 따로 더해진다")
+    else:
+        print(f"예상 LLM 호출 {len(todo) * 2}~{len(todo) * 3}회 (스모크 평균 1.8회/문항), "
+              f"상한 {len(todo) * (MAX_TOOL_ROUNDS + 1)}회")
     if a.dry_run:
         print("API 호출은 하지 않았다.")
         return
