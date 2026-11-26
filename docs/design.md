@@ -16,7 +16,7 @@
 | `suppliers`, `purchase_orders` | 합성 | 리드타임 분포는 시드 고정 난수 |
 | `inventory_lots` | 합성 | lot, 수량, 유통기한, 보관 창고, 안전재고 기준 |
 | `shortage_events` | openFDA 결품 기록 스냅샷(로컬 저장) | 실행 때마다 API를 부르지 않는다. 평가가 흔들리지 않게 스냅샷 날짜를 고정 |
-| `sop_docs` | 합성 문서 약 10개(보관 온도, 유통기한 임박 처리, 회수 절차) | RAG용. 각 문서에 섹션 id |
+| `sop_docs` | 합성 문서 약 10개(보관 온도, 유통기한 임박 처리, 회수 절차) | RAG용. 각 문서에 섹션 id. **2026-11-26 변경: DB가 아니라 `sop/` 파일 25개로 옮겼다(§9)** |
 
 기준일은 고정(예: 2026-11-01)해서 "유통기한 30일 이내" 같은 질문의 정답이 날짜에 따라 바뀌지 않게 한다. 생성 스크립트는 바이트 단위로 재현 가능해야 한다.
 
@@ -26,7 +26,7 @@
 |---|---|---|
 | `query_db(sql)` | 읽기 전용 SQL 실행. 읽기 전용 계정, SELECT만 허용, 행 수·시간 제한 | 재고·발주·판매·리드타임 수치 |
 | `get_shortage(generic_name)` | `shortage_events` 조회(openFDA 스냅샷) | 외부 결품·가용 상태 |
-| `search_sop(query)` | SOP 문서 검색 | 규정·절차("어떻게 처리하나") |
+| `search_sop(query)` | SOP 문서 검색(2026-11-26부터 BM25+bge-m3 결합, §9) | 규정·절차("어떻게 처리하나") |
 
 질문 유형마다 정답 도구가 하나뿐이도록 질문을 만든다. 두 도구가 필요한 질문은 "복합"으로 따로 표시한다.
 
@@ -83,3 +83,11 @@
 - **에이전트 구조**: 단일 에이전트(도구 3개)로 시작한다. 멀티 에이전트는 이후 비교용.
 - **답 형식**: 마지막 줄 `최종 답: ...`(자동 채점용). 규칙은 `docs/eval_protocol.md`.
 - openFDA 필드: `generic_name`, `package_ndc`, `status`(Current 1153 / To Be Discontinued 450 / Resolved 19), `dosage_form`, `presentation`, `company_name`, `therapeutic_category`, 날짜 4종, `update_type`, `availability`, `shortage_reason`, `resolved_note`, `related_info`.
+
+## 9. 변경: 규정 검색 구조와 비용 (2026-11-26)
+§1, §2, §8의 SOP 관련 내용은 이 절로 대체된다.
+- **규정 문서의 원본은 `sop/` 파일 하나다.** 문서 25개(기존 10 + 새로 만든 15), 섹션 158개. DB의 `sop_sections` 테이블은 없앴고, `pharma_ext` 계정은 `shortage_events`만 읽는다. 문서가 서비스와 검색 벤치마크에서 같은 파일이다.
+- **검색 방식은 R3**: BM25(제목 2회 + 본문)와 bge-m3 임베딩(고정 리비전) 순위를 RRF(k=60)로 결합한다. 사전 등록 벤치마크에서 TF-IDF(기존)보다 단어가 적게 겹치는 질의의 상위 3개 정답률이 22.9%p 높았고, 재정렬(R4)은 CPU 지연 기준을 넘어 채택하지 않았다(`docs/rag_eval_results.md`).
+- **색인은 빌드 산출물**: 섹션 벡터를 이미지 빌드 때 계산해 `build/sop_index/`에 두고, 서버는 시작할 때 읽기만 한다(`retrieval/index.py`). 색인에 문서 md5와 모델 리비전을 적어 두고 다르면 시작하지 않는다. 실행 중에는 모델 저장소에 접속하지 않는다(`HF_HUB_OFFLINE=1`).
+- **배포 크기**: PyTorch CPU 빌드와 모델이 이미지에 들어가 약 4GB, 앱 작업은 1 vCPU·3GB. PyTorch 스레드는 1개로 고정한다(CPU 할당량보다 스레드가 많으면 지연이 수 배로 늘었다).
+- **프롬프트 캐싱**: 도구 정의와 시스템 프롬프트(호출당 약 2,200토큰)를 5분 캐시한다. 정답은 유지하고 입력 비용이 약 75% 줄었다(`docs/eval_v2_results.md`).
