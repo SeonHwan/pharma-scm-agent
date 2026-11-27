@@ -6,7 +6,7 @@ PROMPT_VERSION을 올리고 새 run_id로 돌린다 — 기존 결과를 덮어�
       [--ids A001,B002 ...] [--sha 커밋해시] [--strict] [--set v1|v2] [--split dev|test]
 --ids로 일부 문항만, --sha로 run_id에 커밋 해시를 넣어 옛 결과 재사용을 막는다(기본 run_id는 main_<버전>).
 --strict는 실행 중 예외로 실패한 문항이 있으면 종료코드 1로 끝낸다(스모크·CI용). 기본은 항상 0.
---set v2는 평가셋 v2(eval/questions_v2.jsonl, docs/eval_v2_protocol.md), --split은 v2의 dev/test 절반만 고른다.
+--set v2는 평가셋 v2(eval/questions_v2.jsonl), --split은 v2의 dev/test 절반만 고른다.
 """
 
 import argparse
@@ -98,7 +98,7 @@ def main(argv=None):
     ap.add_argument("--set", dest="qset", choices=sorted(QUESTION_SETS), default="v1", help="평가셋 버전")
     ap.add_argument("--split", choices=["dev", "test"], default=None, help="v2의 dev/test 절반만 실행")
     ap.add_argument("--arch", choices=["S", "M"], default="S",
-                    help="S: 단일 에이전트, M: 감독+전문가 3 멀티 에이전트(docs/multi_agent_protocol.md)")
+                    help="S: 단일 에이전트, M: 감독+전문가 3 멀티 에이전트")
     a = ap.parse_args(argv)
     if a.split and a.qset == "v1":
         ap.error("--split은 --set v2에서만 쓴다")
@@ -114,7 +114,7 @@ def main(argv=None):
     print(f"run_id={a.run_id} 구조 {a.arch} 프롬프트 {PROMPT_VERSION} {PROMPT_SHA} 모델 {config.AGENT_MODEL}")
     print(f"문항 {len(qs)}개 중 실행할 것 {len(todo)}개 (이미 있는 {len(qs) - len(todo)}개는 건너뜀)")
     if a.arch == "M":
-        # 멀티 에이전트는 전문가 호출이 더해진다. 평가셋 v3에서 단일 109회 대비 351회(약 3.2배)였다(docs/multi_agent_results.md).
+        # 멀티 에이전트는 전문가 호출이 더해진다. 평가셋 v3에서 단일 109회 대비 351회(약 3.2배)였다.
         print(f"예상 LLM 호출 {len(todo) * 6}~{len(todo) * 12}회 (v3 실측 평균 11.7회/문항), "
               f"상한은 감독 기준 {len(todo) * (MAX_TOOL_ROUNDS + 1)}회에 전문가 호출이 따로 더해진다")
     else:

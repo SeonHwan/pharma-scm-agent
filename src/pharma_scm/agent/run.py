@@ -25,7 +25,7 @@ def _text(content):
 
 def ask(question, graph=None, callbacks=None, trace=None):
     """trace = {"name", "external_id", "session_id", "tags", "metadata"} (모두 선택). Langfuse가 켜져 있으면
-    트레이스 하나를 만들고 결과의 trace_id에 넣는다(docs/langfuse.md). 꺼져 있으면 trace_id는 None."""
+    트레이스 하나를 만들고 결과의 trace_id에 넣는다. 꺼져 있으면 trace_id는 None."""
     graph = graph or build_graph()
     trace = trace or {}
     trace_id = None

@@ -1,4 +1,4 @@
-"""run 디렉터리의 결과를 docs/eval_protocol.md에 사전 등록한 지표로 집계한다.
+"""run 디렉터리의 결과를 사전 등록한 지표로 집계한다.
 
 실행: uv run python -m pharma_scm.evalset.report <run_id> [--json 경로]
 --json을 주면 같은 집계를 JSON으로도 저장한다(gate.py가 읽는다). 비율은 통과 수 k와 전체 수 n으로 담는다.

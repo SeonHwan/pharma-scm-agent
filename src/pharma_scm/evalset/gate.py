@@ -8,7 +8,7 @@ baseline.json 모양:
    "thresholds": {"overall_min": 0~1, "format_min": 0~1,
                   "tokens_ratio_max": 배수, "calls_ratio_max": 배수,
                   "type_floor": {"A": 0~1, ...}   # 선택. 있을 때만 유형별로 검사한다}}
-임계치는 repeat-variance 측정 뒤에 사전 등록하고(docs/eval_repeat_variance_results.md), 기준선은 자동 갱신하지 않는다(사람이 PR로 갱신).
+임계치는 repeat-variance 측정 뒤에 사전 등록하고, 기준선은 자동 갱신하지 않는다(사람이 PR로 갱신).
 스모크는 문항이 유형당 1~2개라 유형별 통과율이 0·50·100%뿐이므로 전체 통과율(overall_min)로 판정한다.
 """
 

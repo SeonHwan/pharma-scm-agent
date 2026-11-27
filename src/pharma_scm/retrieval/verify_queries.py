@@ -1,4 +1,4 @@
-"""생성한 질의를 다른 회사 모델(OpenAI)이 독립적으로 검증한다(docs/rag_eval_protocol.md §9-1, §9-4).
+"""생성한 질의를 다른 회사 모델(OpenAI)이 독립적으로 검증한다.
 
 검증 모델에게는 코퍼스와 질의 문장만 주고, 정답 섹션 id와 fact는 **보여 주지 않는다**. 모델이 "이 질문에 답을 줄 수
 있는 섹션을 모두 고르라"는 요청에 고른 집합이 정답 섹션 하나와 다르면 그 질의를 표시한다. 표시는 사람이 보는 신호이고,
@@ -7,7 +7,7 @@
     uv run --group gen python -m pharma_scm.retrieval.verify_queries                  # 추정만
     uv run --group gen python -m pharma_scm.retrieval.verify_queries --batch 1 --run  # 첫 묶음만 시험
     uv run --group gen python -m pharma_scm.retrieval.verify_queries --run            # 남은 묶음 전부
-    uv run --group gen python -m pharma_scm.retrieval.verify_queries --controls --run # 통제 질의(§9-6)
+    uv run --group gen python -m pharma_scm.retrieval.verify_queries --controls --run # 통제 질의.
 """
 
 import argparse

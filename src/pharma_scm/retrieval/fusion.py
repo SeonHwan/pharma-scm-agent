@@ -1,4 +1,4 @@
-"""순위 결합 R3: 여러 검색 방식의 순위를 RRF(Reciprocal Rank Fusion)로 합친다(docs/rag_eval_protocol.md §4).
+"""순위 결합 R3: 여러 검색 방식의 순위를 RRF(Reciprocal Rank Fusion)로 합친다.
 
 섹션의 점수 = 각 방식에서의 순위 r(1부터)에 대한 1 / (k + r)의 합. 점수는 크기가 다른 방식끼리도 순위만 쓰므로
 점수를 정규화할 필요가 없다. k=60은 원 논문의 값이고 조정하지 않는다. 같은 점수면 section_id 순이다.

@@ -5,7 +5,7 @@
 - 평가 채점 결과는 트레이스에 점수로 붙인다(score_grade).
 
 키: LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, LANGFUSE_BASE_URL(.env). LANGFUSE_TRACING_ENABLED=false면 끈다.
-API는 설치된 langfuse 5.2.0 소스로 확인했다(docs/langfuse.md).
+API는 설치된 langfuse 5.2.0 소스로 확인했다.
 """
 
 import os

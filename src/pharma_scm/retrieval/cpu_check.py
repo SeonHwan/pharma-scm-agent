@@ -1,4 +1,4 @@
-"""GPU 없는 환경(ECS Fargate)을 가정한 CPU 지연과 메모리 측정(docs/rag_eval_results.md §5의 3, 4).
+"""GPU 없는 환경(ECS Fargate)을 가정한 CPU 지연과 메모리 측정(4).
 
 사전 등록 실행(run_benchmark)과는 별개의 "배포 환경 확인"이다. 같은 질의에 R2, R3, R4를 CPU로 돌려
 (1) 질의당 지연을 스레드 수별로, (2) 모델을 올린 프로세스의 최대 메모리를, (3) GPU 실행과 순위가 같은지를 본다.

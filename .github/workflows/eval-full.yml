@@ -2,7 +2,7 @@ name: eval-full
 
 # 수동 전체 평가(114문항). 실제 LLM을 호출한다: 1회 약 58.7만 입력 토큰, 호출 약 225회(v1 실측).
 # eval/baseline.json의 임계치는 스모크 6문항용이라 여기서는 게이트를 적용하지 않는다. 집계와 결과를 보관하고,
-# 기준선 갱신 PR의 근거로 쓴다(docs/eval_protocol.md, docs/ci_eval_gate_plan.md).
+# 기준선 갱신 PR의 근거로 쓴다.
 on:
   workflow_dispatch:
     inputs:

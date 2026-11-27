@@ -1,4 +1,4 @@
-"""평가셋 v2를 만든다(docs/eval_v2_protocol.md). v1(eval/questions.jsonl)은 그대로 둔다.
+"""평가셋 v2를 만든다. v1(eval/questions.jsonl)은 그대로 둔다.
 
 - G(새 규정 문항 126개): 검색 벤치마크에서 검증을 마친 질의(eval/rag/queries_v2_final.jsonl)를 그대로 쓴다.
   정답은 질의를 만든 섹션 id다.

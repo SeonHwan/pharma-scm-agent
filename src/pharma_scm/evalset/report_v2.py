@@ -1,4 +1,4 @@
-"""평가셋 v2 결과 집계와 두 실행 비교(docs/eval_v2_protocol.md §5).
+"""평가셋 v2 결과 집계와 두 실행 비교.
 
     uv run python -m pharma_scm.evalset.report_v2 <run_id>                 # 한 실행 집계
     uv run python -m pharma_scm.evalset.report_v2 <기준 run_id> <개선 run_id> [--split test]   # 짝지은 비교
@@ -17,7 +17,7 @@ from .report import fmt
 from .run_eval import load_questions
 
 RUNS = config.ROOT / "data" / "runs"
-# 100만 토큰당 달러(Sonnet 5.5 공시 단가, 5분 캐시 쓰기). 입력 비용 판정에 쓴다(docs/eval_v2_protocol.md §8-1).
+# 100만 토큰당 달러(Sonnet 5.5 공시 단가, 5분 캐시 쓰기). 입력 비용 판정에 쓴다.
 PRICE = {"input": 2.0, "cache_write": 2.5, "cache_read": 0.2, "output": 10.0}
 
 
@@ -90,7 +90,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("runs", nargs="+", help="run_id 하나(집계) 또는 둘(기준, 개선 비교)")
     ap.add_argument("--split", choices=["dev", "test"], default=None)
-    ap.add_argument("--set", dest="qset", default="v2", help="평가셋(v2, v3 등). v3는 멀티 에이전트 비교(docs/multi_agent_protocol.md)")
+    ap.add_argument("--set", dest="qset", default="v2", help="평가셋(v2, v3 등). v3는 멀티 에이전트 비교")
     a = ap.parse_args(argv)
     qs = {q["id"]: q for q in load_questions(a.qset)}
     if len(a.runs) == 1:

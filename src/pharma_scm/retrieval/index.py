@@ -1,4 +1,4 @@
-"""운영 규정 검색: sop/ 문서를 R3(BM25 + bge-m3 임베딩, RRF 결합)로 검색한다(docs/rag_eval_results.md §4, §8).
+"""운영 규정 검색: sop/ 문서를 R3(BM25 + bge-m3 임베딩, RRF 결합)로 검색한다.
 
 섹션 벡터는 빌드 때 한 번 계산해 파일로 저장하고(build), 서버는 시작할 때 읽기만 한다(load). 시작할 때 섹션을
 임베딩하면 메모리 피크(약 2.5GB)와 시간(CPU에서 10초 이상)이 생기기 때문이다. 색인 파일에는 만들 때의 문서 md5가
@@ -55,7 +55,7 @@ class SopIndex:
 
 
 def quantize_int8(model):
-    """질의 임베딩용으로 Linear 층을 그 자리에서 int8 동적 양자화한다(docs/rag_eval_results.md §12).
+    """질의 임베딩용으로 Linear 층을 그 자리에서 int8 동적 양자화한다.
     사본을 만들면 fp32 원본과 함께 메모리에 남아 약 5.8GB가 되므로 inplace로 바꾼다."""
     import warnings
 
@@ -67,7 +67,7 @@ def quantize_int8(model):
 
 
 def query_int8_enabled():
-    """기본은 켠다(Fargate 1 vCPU p95 1358ms → 236ms, docs/rag_eval_results.md §13). PHARMA_QUERY_INT8=0이면 fp32."""
+    """기본은 켠다(Fargate 1 vCPU p95 1358ms → 236ms). PHARMA_QUERY_INT8=0이면 fp32."""
     return os.environ.get("PHARMA_QUERY_INT8", "1") != "0"
 
 

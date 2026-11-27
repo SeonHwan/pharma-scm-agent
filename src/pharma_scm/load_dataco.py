@@ -1,6 +1,6 @@
 """DataCo 주문·배송 성과를 약품 SKU에 매핑해 sales_orders 행으로 만든다.
 
-실제 약품 수요가 아니라 수요·배송 패턴의 대역(stand-in)이다. 규칙은 docs/data_mapping.md.
+실제 약품 수요가 아니라 수요·배송 패턴의 대역(stand-in)이다.
 """
 
 import csv

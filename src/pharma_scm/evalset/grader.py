@@ -1,4 +1,4 @@
-"""자동 채점기. 규칙은 docs/eval_protocol.md에 사전 등록돼 있다(결과를 보기 전에 확정).
+"""자동 채점기. 규칙은 결과를 보기 전에 사전 등록했다.
 
 에이전트 답의 마지막 줄은 `최종 답: ...` 형식이어야 한다. 그 줄만 채점한다.
 """
@@ -70,7 +70,7 @@ def grade_answer(q, answer_text):
         got = set(_SEC.findall(fin))
         ok = g["value"] in got and len(got) <= 2
         return ok, "" if ok else f"섹션 불일치 got={sorted(got)} gold={g['value']}"
-    # 평가셋 v3(docs/multi_agent_protocol.md): 여러 도구를 합치는 문항과 문서 모순 문항
+    # 평가셋 v3: 여러 도구를 합치는 문항과 문서 모순 문항
     if kind == "set_section":
         got_skus, got_secs = set(_SKU.findall(fin)), set(_SEC.findall(fin))
         ok_set = got_skus == set(g["value"]["skus"])

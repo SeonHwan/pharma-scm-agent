@@ -1,6 +1,6 @@
 """통과한 실제 답의 `최종 답:` 줄을 규칙으로 망가뜨려 채점기가 잡는지 시험한다. 모델 호출 없음.
 
-기대 결과는 docs/eval_protocol.md 4-1에 실행 전에 등록돼 있다. 원본 결과는 건드리지 않고
+기대 결과는 실행 전에 등록했다. 원본 결과는 건드리지 않고
 data/runs_broken/<run_id>/manifest.json에 변형 내역을 쓴다.
 실행: uv run python -m pharma_scm.evalset.make_broken_runs <run_id>
 """

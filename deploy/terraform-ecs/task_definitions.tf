@@ -9,7 +9,7 @@ resource "aws_ecs_task_definition" "app" {
 
   # Fargate: 태스크마다 ENI와 IP를 받는 awsvpc 방식. cpu 1024 = 1 vCPU, memory는 MiB.
   # 규정 검색 모델(bge-m3)이 이미지에 들어 있어 메모리가 대기 약 0.8GB, 모델 파일 매핑까지 약 2GB다.
-  # 0.5 vCPU는 검색 p95 약 0.7초, 1 vCPU는 약 0.35초였다(로컬 측정, docs/rag_eval_results.md §9).
+  # 0.5 vCPU는 검색 p95 약 0.7초, 1 vCPU는 약 0.35초였다(로컬 측정).
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
   cpu                      = 1024

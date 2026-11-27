@@ -1,6 +1,6 @@
 {
  "source_run": "main_v1",
- "note": "v1 전체 114문항 실행의 집계. 임계치는 스모크 6문항용(docs/eval_repeat_variance_results.md). 자동 갱신 금지, 갱신은 PR로.",
+ "note": "v1 전체 114문항 실행의 집계. 임계치는 스모크 6문항용. 자동 갱신 금지, 갱신은 PR로.",
  "summary": {
   "run_id": "main_v1",
   "n_results": 114,

@@ -27,7 +27,7 @@ RUN uv run --no-sync python -m pharma_scm.retrieval.index
 # 실행 중에는 모델 저장소에 접속하지 않는다(모델은 이미지에 있다).
 ENV HF_HUB_OFFLINE=1
 # PyTorch는 컨테이너 밖 호스트의 코어 수(예: 16)만큼 스레드를 띄우는데, CPU 할당량이 0.5~1 vCPU면 스레드들이
-# 할당량을 순식간에 다 쓰고 멈춰서 질의 하나가 4.5초까지 걸렸다(docs/rag_eval_results.md §9). 1개로 고정한다.
+# 할당량을 순식간에 다 쓰고 멈춰서 질의 하나가 4.5초까지 걸렸다. 1개로 고정한다.
 ENV OMP_NUM_THREADS=1
 USER app
 EXPOSE 8000
