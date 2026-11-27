@@ -4,7 +4,7 @@
 
 ## 1. 왜 먼저 문제를 어렵게 만드는가
 - 현재 규정 코퍼스는 합성 SOP 문서 10개, 섹션 30개, 합계 약 7.6KB다. 평가 문항 중 규정 유형(C) 20개는 각각 정답 섹션이 하나이고, 질문이 섹션과 같은 단어를 쓴다.
-- 현재 검색(`search_sop`, 글자 2-gram TF-IDF)은 이 문항에서 top-1 20/20으로 기록돼 있다(`HANDOFF.md`의 오프라인 검증 기록). **이미 천장이라 방식을 바꿔도 차이를 잴 수 없다.**
+- 현재 검색(`search_sop`, 글자 2-gram TF-IDF)은 이 문항에서 top-1 20/20으로 기록돼 있다(개발 초기 오프라인 검증 기록, 근거와 재현 방법은 §10). **이미 천장이라 방식을 바꿔도 차이를 잴 수 없다.**
 - 그래서 (1) 섹션 수를 늘리고 비슷하지만 다른 규정을 의도적으로 섞은 코퍼스와, (2) 질문이 섹션과 단어를 덜 공유하는 질의를 만든 **검색 벤치마크**를 먼저 고정하고, 그 위에서 방식을 비교한다.
 - 이 벤치마크도 합성이다. 현실의 규정 문서와 사용자 질문이 아니므로, 결과는 "이 합성 벤치마크에서의 차이"로만 해석한다.
 
@@ -116,3 +116,19 @@
 - 벤치마크 결과(`docs/rag_eval_results.md`)를 본 뒤, 검색을 에이전트에 연결하기 위해 구조를 바꿨다. 새 문서 15개를 `eval/rag/corpus_v2/`에서 `sop/`로 옮겨 **규정 문서의 원본을 `sop/` 하나로** 만들었다. 서비스하는 문서와 벤치마크가 같은 파일을 쓴다.
 - **파일 내용은 바뀌지 않았다.** 25개 파일 모두 파일 이름과 md5가 이전 등록값과 같고, 등록 파일(`eval/rag/registered.json`)의 경로 키만 바뀌었다. 따라서 이미 실행한 벤치마크 결과는 이 코퍼스에 그대로 해당한다.
 - 9-2의 "기존 `sop/`는 바꾸지 않는다"는 이 시점부터 적용하지 않는다. 에이전트, DB, 평가 문항이 30개 섹션을 전제로 하던 부분은 이어지는 커밋에서 새 구조에 맞춘다(DB에서 SOP 테이블 제거, 검색 모듈 교체, 평가 기준선 재측정).
+
+## 10. §1 기록의 근거 보완 (2026-11-27, 규칙 변경 아님)
+- §1의 "top-1 20/20"은 에이전트 코드를 처음 만들 때(2026-11-06 무렵) LLM 없이 돌린 오프라인 검증의 기록이고, 그때의 측정 파일은 저장소에 남기지 않았다. 당시 검색 코드(`agent/tools.py`의 `run_search_sop`)는 이후 R3로 교체되어 지금 저장소에 없다.
+- 그래서 같은 계산을 지금 코드로 다시 쟀다. `src/pharma_scm/retrieval/methods.py`의 R0(`TfidfCosine`, 위 `run_search_sop`와 같은 글자 2-gram TF-IDF 코사인)를 기존 문서 10개·섹션 30개(`SOP-01`~`SOP-10`, §2대로 id와 내용 불변)에 대해 만들고, `eval/questions.jsonl`의 규정 유형(C) 20문항 질문으로 1위 섹션을 정답 섹션과 대조했다. 결과 **top-1 20/20**으로 §1의 기록과 같다. LLM 호출은 없다.
+- 재현(저장소 루트, 색인·DB 불필요):
+
+```python
+import json
+from pharma_scm.retrieval.corpus import load_corpus
+from pharma_scm.retrieval.methods import TfidfCosine
+
+secs = [s for s in load_corpus() if int(s["doc_id"].split("-")[1]) <= 10]  # 섹션 30개
+r = TfidfCosine(secs)
+c = [q for q in map(json.loads, open("eval/questions.jsonl", encoding="utf-8")) if q["type"] == "C"]
+print(sum(r.rank(q["question"])[0] == q["gold"]["value"] for q in c), "/", len(c))
+```

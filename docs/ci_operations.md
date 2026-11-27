@@ -11,7 +11,7 @@
 | `deploy.yml` | master push(`src/**`, `pyproject.toml`, `uv.lock`, `Dockerfile` 변경, 저장소 변수 `DEPLOY_ENABLED`가 `true`일 때만)와 수동(`approve_cost`) | `gate`(`_checks.yml`을 `run_tests`·`run_smoke`로 호출) 통과 뒤 ECR push와 ECS 배포 | 게이트가 약 10회 |
 | `_checks.yml` | 직접 실행되지 않음(`workflow_call`) | 환경 준비(Postgres, uv, 의존성, DB 복원)와 린트·테스트·스모크 평가·게이트 판정을 입력(`run_tests`, `run_smoke`, `run_prefix`)에 따라 실행 | `run_smoke`일 때만 |
 
-`deploy.yml`의 배포 단계(OIDC, ECR, ECS)는 이 문서의 범위가 아니다. `HANDOFF.md`의 8단계를 본다.
+`deploy.yml`의 배포 단계(OIDC, ECR, ECS)의 동작은 워크플로 파일의 주석과 `docs/interview_concepts.md` 10~12절(OIDC, 서킷 브레이커 롤백, Terraform과 CD의 역할 분담)을 본다. 실행 기록은 아래 "검증 상태 추가 (2026-11-27, 공개 저장소)"에 있다.
 
 `eval-smoke`의 경로 필터: `src/pharma_scm/agent/**`, `src/pharma_scm/evalset/**`, `eval/**`, `scripts/ci_restore_db.sh`, `deploy/pharma.sql.gz`, `pyproject.toml`, `uv.lock`, 워크플로 파일 자체. 이 밖(문서, 테스트, API 서버 코드 등)만 바뀐 PR에서는 돌지 않는다.
 같은 PR에 커밋을 더 올리면 진행 중인 스모크는 취소되고 새로 돈다(불필요한 호출 방지). 전체 평가는 동시에 둘이 돌지 않으며 진행 중인 것은 취소하지 않는다.

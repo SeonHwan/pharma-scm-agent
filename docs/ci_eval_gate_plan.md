@@ -90,7 +90,6 @@
 
 ## 완료 후 갱신할 문서
 - `docs/eval_protocol.md`에 게이트 규칙·임계치(사전 등록 방식, 측정 결과 링크)
-- `HANDOFF.md`에 이 작업의 상태 한 줄
 
 ## 첫 행동 제안
 1. `git status`로 현재 상태를 확인하고(`data/raw/*`·`openfda_result.txt`는 건드리지 않는다), 로컬에서 `docker compose up -d db` + 덤프 복원 후 `uv run pytest -q`가 36 passed인지 확인한다(DB 컨테이너가 이미 있으면 상태만 확인).

@@ -36,10 +36,10 @@
 | 평가(반복) | 30문항 × 5회 150건 전부 통과, 이 값으로 CI 게이트 임계치를 규칙대로 계산 | `docs/eval_repeat_variance_results.md` |
 | 채점기 | 망가뜨린 답 541건이 모두 기대대로 판정 | `docs/eval_results_v1.md` |
 | 서버 | FastAPI: `/health`·`/ready` 분리, API 키 인증, 키별 요청 한도, 타임아웃, 요청 ID, JSON 로그와 단계별 시간 | `docs/operations.md` |
-| CI | (2026-11-25 기준) `ci.yml`: ruff, pytest 111개(Postgres 복원 포함), Docker 빌드가 push마다 통과. `eval-smoke.yml`: PR에서 스모크 평가와 게이트 판정 통과 | `docs/ci_operations.md` |
+| CI | `ci.yml`: ruff, pytest(Postgres 복원 포함, 2026-11-27 149 passed·2 skipped), 규정 검색 모델 캐시와 색인 빌드, Docker 빌드가 push마다 통과. `eval-smoke.yml`: PR에서 스모크 평가와 게이트 판정 통과 | `docs/ci_operations.md` |
 | 배포 1 | EC2에 Docker로 임시 배포(CLI, Terraform 각 1회), 외부 호출 검증 후 철거 | `docs/operations.md` |
 | 배포 2 | ECS Fargate + RDS + ALB를 Terraform으로 올려 DB 복원, `/health`·`/ready`·`/ask` 확인 후 과금 자원 철거 | `docs/ecs_deploy_walkthrough.md`, `docs/ecs_cost_and_teardown.md` |
-| CD | GitHub Actions(OIDC) → 평가 게이트 → ECR push → ECS 롤링 배포를 실제로 실행(리비전 4→5, 응답 확인). 이미지를 받지 못하는 리비전을 일부러 배포해 서킷 브레이커가 약 14분 만에 직전 리비전으로 자동 복귀시키는 것을 관찰 | `HANDOFF.md` 8단계 |
+| CD | GitHub Actions(OIDC) → 평가 게이트 → ECR push → ECS 롤링 배포를 실제로 실행(리비전 4→5, 응답 확인). 이미지를 받지 못하는 리비전을 일부러 배포해 서킷 브레이커가 약 14분 만에 직전 리비전으로 자동 복귀시키는 것을 관찰. 이 공개 저장소에서도 수동 실행 배포가 성공했다(2026-11-27, 리비전 9→10, Actions 실행 기록 공개) | `docs/ci_operations.md`(2026-11-27), `docs/interview_concepts.md` §11 |
 
 면접에서 설명할 수 있도록 개념별 정리는 `docs/interview_concepts.md`에 있다.
 
@@ -49,7 +49,7 @@
 - **규정 코퍼스**: 규정 문서와 검색 질의는 LLM으로 만든 합성 데이터이고, 문서 사이에 모순이 있다(예: 온도 기록 보관 기간 3/5/7년). 검색 결과에 함께 올라와 답에 드러난다.
 - **검색 지연**: Fargate 1 vCPU에서 fp32 검색 p95가 991~1,358ms로 채택 기준(1초 미만)에 여유가 없어, 질의 임베딩을 int8로 양자화해 236ms로 줄였다(정답 포함 여부는 벤치마크 146개 모두 같음, 상위 3개 순서는 48개에서 바뀜). 에이전트 평가는 fp32로 측정했다. 로컬 CPU 제한 측정은 CPU 세대 차이를 반영하지 못했다. 이미지는 모델 때문에 약 4GB다.
 - **반복 측정의 낙관성**: 150건 통과에는 기준선에서 실제로 실패한 문항이 포함되지 않았다(결과를 보고 고르지 않으려는 설계).
-- **하지 않은 것**: 서술 근거 judge, judge가 필요한 문항(모호한 질문, 여러 턴 대화), 상시 운영(HTTPS, 원격 tfstate, 모니터링). Langfuse는 로컬 실행과 평가에만 연결했고 AWS 배포에는 연결하지 않았다. 규정 검색 구조 변경 뒤의 CI 새 단계(모델 캐시, 색인 빌드)와 자동 배포는 아직 실행하지 않았다.
+- **하지 않은 것**: 서술 근거 judge, judge가 필요한 문항(모호한 질문, 여러 턴 대화), 상시 운영(HTTPS, 원격 tfstate, 모니터링). Langfuse는 로컬 실행과 평가에만 연결했고 AWS 배포에는 연결하지 않았다. master push로 시작하는 자동 배포(저장소 변수 `DEPLOY_ENABLED`로 켬)는 아직 실행하지 않았다. 배포는 수동 실행으로만 했다.
 - **CD의 미확인 범위**: 서킷 브레이커의 정확한 실패 임계값, 앱이 떠서 헬스 체크에 실패하는 경우의 롤백, 수동 롤백, push로 켠 자동 배포의 실제 동작은 확인하지 않았다. 롤백 관찰은 이미지 풀 실패 한 가지 시나리오다.
 - **운영 아님**: 사용자도 트래픽도 없다. 태스크 1개 구성이라 가용성 한계가 있다.
 
@@ -68,7 +68,6 @@
 | CI 운영 규칙 | `docs/ci_operations.md` |
 | ECS 배포 복습, 비용과 철거 | `docs/ecs_deploy_walkthrough.md`, `docs/ecs_cost_and_teardown.md` |
 | 면접 개념 정리 | `docs/interview_concepts.md` |
-| 진행 상태와 작업 방식 | `HANDOFF.md` |
 
 ## 실행
 ```bash
