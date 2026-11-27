@@ -72,3 +72,10 @@ uv run python -m pharma_scm.evalset.gate data/runs/smoke_local/summary.json
 - **원인 확인(직접 확인)**: 2026-11-23~24의 `ci` 실패 4건(ea13c2a, d631f12, 9453caa, e70bf8d)은 로그 4건이 모두 `scripts/ci_restore_db.sh: Permission denied`(종료 코드 126)였다. git에 `100644`(실행 비트 없음)로 커밋돼 있었기 때문이고, `100755`로 커밋한 뒤(`fa9068f`) `ci`가 성공으로 돌아왔다. 이 PC에서는 파일이 실행 가능해 몰랐다.
 - 검증됨: 재사용 워크플로 `_checks.yml`을 쓰는 `ci`(`run_tests`, 스모크 단계는 건너뜀)와 `eval-smoke`(PR #3, `run_smoke`, 게이트 판정 통과, artifact `smoke-<해시>` 이름 유지).
 - 미검증: `deploy.yml`의 `gate`가 두 입력을 함께 넘기는 실제 실행(인프라가 내려가 있어 실행하지 않았다, 다음 배포 때 처음 돈다), `DEPLOY_ENABLED=true`로 켠 push 배포, 위 "미검증"의 나머지 항목.
+
+## 검증 상태 추가 (2026-11-27, 공개 저장소)
+- 검증됨: **`deploy.yml` 수동 실행의 전 과정**. 실행 `45911908033`(`master` `6bcda11`, `approve_cost=true`)이 성공했다. `gate`(재사용 `_checks.yml`에 `run_tests`·`run_smoke`를 함께 넘김: pytest 149 passed·2 skipped, 스모크 평가와 게이트 판정 통과, 약 2분) → `deploy`(OIDC 역할 맡기, 이미지 빌드·ECR push, 새 태스크 정의 등록, 서비스 교체, 약 7분 반). ECS 서비스가 리비전 9(이미지 `boot-6bcda11`) → 10(`6bcda11`)으로 바뀌어 `COMPLETED`·steady state가 됐고, ALB 경유 `/health`·`/ready` 200, 키 없는 `/ask` 401, `/ask` 1회 정답(`query_db`, 90)을 확인했다. 새 저장소의 숫자 ID로 바꾼 OIDC 신뢰 정책(`825d46c`)으로 역할 맡기가 통과한 것도 이 실행이 처음이다.
+- 순서: 스택을 Terraform으로 올릴 때 서비스가 쓸 첫 이미지를 `boot-<해시>` 태그로 직접 push했다. ECR 태그가 불변이라, 같은 커밋을 Actions가 `<해시>` 태그로 push할 수 있게 하려는 것이다. 이후 배포는 Actions만 했다.
+- 경고: `actions/checkout@v4`, `aws-actions/configure-aws-credentials@v4`가 Node.js 20 대상이라 Node.js 24로 강제 실행된다는 경고가 나왔다(이번 실행에는 영향 없음).
+- 인프라는 실행 뒤 철거했다(비용은 `docs/ecs_cost_and_teardown.md` §5).
+- 미검증(그대로): `DEPLOY_ENABLED=true`로 켠 push 배포, 앱이 뜬 뒤 헬스 체크에 실패하는 경우의 롤백, 수동 롤백, 서킷 브레이커 실패 임계값, `eval-smoke` 실패 경로, fork PR 스킵.
