@@ -30,15 +30,14 @@
 | 규정 검색 | 단어가 적게 겹치는 질의 74개에서 상위 3개 정답률 TF-IDF 73.0% → 결합(R3) 95.9%(95% 구간이 겹치지 않음), CPU에서 순위가 GPU와 49/49 같음 | `src/pharma_scm/retrieval/` |
 | 평가(새 검색 연결 후) | v1 114문항 113/114, 평가셋 v2 156문항(새 규정 126, 어려운 DB 30) 156/156 | `eval/questions_v2.jsonl` |
 | 프롬프트 캐싱 | test 78문항 정답 78 → 77(허용 범위), 입력 비용 −75.2%, v1 회귀 확인 통과 | `src/pharma_scm/agent/graph.py` |
-| 배포 3 (규정 검색 모델 포함) | Fargate 1 vCPU·3GB에서 `/health`·`/ready`·`/ask` 확인, 메모리 약 800MB, 검색 p95 991ms → 질의 임베딩 int8로 236ms, 확인 후 철거 | `Dockerfile`, `deploy/terraform-ecs/` |
+| 배포(규정 검색 모델 포함) | Fargate 1 vCPU·3GB에서 `/health`·`/ready`·`/ask` 확인, 메모리 약 800MB, 검색 p95 991ms → 질의 임베딩 int8로 236ms, 확인 후 철거 | `Dockerfile`, `deploy/terraform-ecs/` |
 | 멀티 에이전트 비교 | 감독+전문가 3(M)과 단일(S)을 같은 모델·도구·프롬프트 문구로 평가셋 v3 30문항에서 비교: 정답 30/30 대 30/30, M 비용 +108%, 지연 2.2배 → 사전 등록 규칙대로 S 유지. 원인은 전문가 보고가 출력 상한에 걸려 비고 감독이 재위임한 것(트레이스로 확인) | `src/pharma_scm/agent/multi.py`, `eval/questions_v3.jsonl` |
 | 관측(Langfuse) | 요청·평가 문항마다 트레이스(LLM·도구 단계, 토큰·캐시·비용), 평가 채점을 점수로 기록. 요청 ID와 `<run_id>:<문항>`에서 트레이스 ID를 결정적으로 만들어 로그·결과 파일과 연결. Anthropic SDK의 자체 계측과 겹쳐 비용이 두 배로 합산되던 문제를 찾아 고침 | `src/pharma_scm/agent/tracing.py` |
 | 평가(반복) | 30문항 × 5회 150건 전부 통과, 이 값으로 CI 게이트 임계치를 규칙대로 계산 | `src/pharma_scm/evalset/gate.py`, `eval/baseline.json` |
 | 채점기 | 망가뜨린 답 541건이 모두 기대대로 판정 | `src/pharma_scm/evalset/grader.py`, `make_broken_runs.py` |
 | 서버 | FastAPI: `/health`·`/ready` 분리, API 키 인증, 키별 요청 한도, 타임아웃, 요청 ID, JSON 로그와 단계별 시간 | `src/pharma_scm/api/` |
 | CI | `ci.yml`: ruff, pytest(Postgres 복원 포함, 2026-11-27 149 passed·2 skipped), 규정 검색 모델 캐시와 색인 빌드, Docker 빌드가 push마다 통과. `eval-smoke.yml`: PR에서 스모크 평가와 게이트 판정 통과 | `.github/workflows/ci.yml`, `eval-smoke.yml` |
-| 배포 1 | EC2에 Docker로 임시 배포(CLI, Terraform 각 1회), 외부 호출 검증 후 철거 | `deploy/terraform/`, `deploy/compose.deploy.yaml` |
-| 배포 2 | ECS Fargate + RDS + ALB를 Terraform으로 올려 DB 복원, `/health`·`/ready`·`/ask` 확인 후 과금 자원 철거 | `deploy/terraform-ecs/` |
+| 배포(ECS) | ECS Fargate + RDS + ALB를 Terraform으로 올려 DB 복원, `/health`·`/ready`·`/ask` 확인 후 과금 자원 철거 | `deploy/terraform-ecs/` |
 | CD | GitHub Actions(OIDC) → 평가 게이트 → ECR push → ECS 롤링 배포를 실제로 실행(리비전 4→5, 응답 확인). 이미지를 받지 못하는 리비전을 일부러 배포해 서킷 브레이커가 약 14분 만에 직전 리비전으로 자동 복귀시키는 것을 관찰. 이 공개 저장소에서도 수동 실행 배포 성공(2026-11-27, 리비전 9→10, Actions 실행 기록 공개) | `.github/workflows/deploy.yml` |
 
 ## 한계와 하지 않은 것

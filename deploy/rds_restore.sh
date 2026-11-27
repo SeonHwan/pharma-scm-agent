@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # RDS(관리형 PostgreSQL)에 읽기 전용 역할을 만들고 덤프를 복원. 일회성 ECS 태스크 안에서 실행(처음 한 번만).
-# restore_db.sh는 같은 서버의 DB 컨테이너(docker compose exec)용이라 RDS에는 쓸 수 없어서 따로 둠.
 # 환경: PGHOST, PGUSER, PGPASSWORD, PGDATABASE(psql이 직접 읽는 표준 변수), DB_RO_PASSWORD, DB_EXT_PASSWORD
 # 사용:  rds_restore.sh [덤프 파일, 기본 /pharma.sql.gz]
 set -euo pipefail
