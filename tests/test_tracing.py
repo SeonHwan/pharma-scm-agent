@@ -66,7 +66,7 @@ def test_score_grade_is_noop_when_disabled():
 
 
 def test_multi_agent_counts_specialist_calls_and_tools(monkeypatch):
-    """감독이 결품 담당에게 맡기고, 결품 담당이 get_shortage를 부르는 흐름(가짜 모델). 전문가 안의 LLM 호출과 도구가 집계된다."""
+    """감독이 결품 담당에게 맡기고, 결품 담당이 get_shortage를 부르는 흐름(가짜 모델). 전문가 안의 LLM 호출과 도구가 집계됨."""
     from pharma_scm.agent import multi
 
     sup = FakeChat(script=[

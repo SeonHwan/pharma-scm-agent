@@ -4,7 +4,7 @@
     uv run python -m pharma_scm.evalset.report_v2 <기준 run_id> <개선 run_id> [--split test]   # 짝지은 비교
     uv run python -m pharma_scm.evalset.report_v2 <S run_id> <M run_id> --set v3                # 멀티 에이전트 비교
 
-비교는 두 실행에 모두 있는 문항만 쓴다. 정답률 차이는 McNemar 정확 검정(엇갈린 문항 수에 대한 양측 이항 검정)으로 본다.
+비교는 두 실행에 모두 있는 문항만 사용. 정답률 차이는 McNemar 정확 검정(엇갈린 문항 수에 대한 양측 이항 검정)으로 봄.
 """
 
 import argparse
@@ -17,7 +17,7 @@ from .report import fmt
 from .run_eval import load_questions
 
 RUNS = config.ROOT / "data" / "runs"
-# 100만 토큰당 달러(Sonnet 5.5 공시 단가, 5분 캐시 쓰기). 입력 비용 판정에 쓴다.
+# 100만 토큰당 달러(Sonnet 5.5 공시 단가, 5분 캐시 쓰기). 입력 비용 판정에 사용.
 PRICE = {"input": 2.0, "cache_write": 2.5, "cache_read": 0.2, "output": 10.0}
 
 
@@ -37,7 +37,7 @@ def tokens(rs):
 
 
 def input_cost(tk):
-    """입력 비용(달러). input은 캐시 읽기·쓰기를 포함한 합계라 그 몫을 빼고 각 단가를 곱한다."""
+    """입력 비용(달러). input은 캐시 읽기·쓰기를 포함한 합계라 그 몫을 빼고 각 단가를 곱함."""
     plain = tk["input"] - tk["cache_read"] - tk["cache_write"]
     return (plain * PRICE["input"] + tk["cache_write"] * PRICE["cache_write"]
             + tk["cache_read"] * PRICE["cache_read"]) / 1e6

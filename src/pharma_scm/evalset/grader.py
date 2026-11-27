@@ -1,6 +1,6 @@
-"""자동 채점기. 규칙은 결과를 보기 전에 사전 등록했다.
+"""자동 채점기. 규칙은 결과를 보기 전에 사전 등록.
 
-에이전트 답의 마지막 줄은 `최종 답: ...` 형식이어야 한다. 그 줄만 채점한다.
+에이전트 답의 마지막 줄은 `최종 답: ...` 형식이어야 함. 그 줄만 채점.
 """
 
 import re
@@ -33,7 +33,7 @@ def _status_in(s):
 
 
 def grade_answer(q, answer_text):
-    """반환: (pass, reason). format 오류는 reason이 'format:'으로 시작한다."""
+    """반환: (pass, reason). format 오류는 reason이 'format:'으로 시작."""
     fin = final_line(answer_text)
     if fin is None:
         return False, "format: 최종 답 줄 없음"
@@ -79,7 +79,7 @@ def grade_answer(q, answer_text):
             f"집합 {'일치' if ok_set else '불일치'} got={sorted(got_skus)}, 섹션 got={sorted(got_secs)}")
     if kind == "number_section":
         got_secs = set(_SEC.findall(fin))
-        nums = _numbers(_SEC.sub(" ", fin))  # 섹션 id 안의 숫자는 빼고 센다
+        nums = _numbers(_SEC.sub(" ", fin))  # 섹션 id 안의 숫자는 빼고 셈
         if len(nums) != 1:
             return False, f"format: 숫자 {len(nums)}개"
         ok_num = _num_ok(nums[0], g["value"]["number"])
@@ -100,7 +100,7 @@ def grade_answer(q, answer_text):
         return ok, "" if ok else f"상태별 개수 got={got}"
     if kind == "sku_number":
         got_skus = set(_SKU.findall(fin))
-        nums = _numbers(_SKU.sub(" ", fin))  # SKU id 안의 숫자는 빼고 센다
+        nums = _numbers(_SKU.sub(" ", fin))  # SKU id 안의 숫자는 빼고 셈
         if len(nums) != 1:
             return False, f"format: 숫자 {len(nums)}개"
         ok = got_skus == set(g["value"]["skus"]) and _num_ok(nums[0], g["value"]["number"])
@@ -109,7 +109,7 @@ def grade_answer(q, answer_text):
 
 
 def grade_tools(q, tools_called):
-    """정답 도구가 하나뿐인 질문에서만 채점한다. 반환: (exact, hit) 또는 (None, None)."""
+    """정답 도구가 하나뿐인 질문에서만 채점. 반환: (exact, hit) 또는 (None, None)."""
     exp = q["expected_tools"]
     if q["type"] == "E" or len(exp) != 1:
         return None, None

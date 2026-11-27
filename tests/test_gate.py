@@ -14,7 +14,7 @@ BASELINE = {
 
 
 def make_run(**over):
-    """기준선 이내인 5문항 스모크 실행. over로 항목을 덮어쓴다."""
+    """기준선 이내인 5문항 스모크 실행. over로 항목을 덮어씀."""
     run = {
         "run_id": "smoke", "n_results": 5,
         "by_type": {"A": {"k": 2, "n": 2}, "B": {"k": 1, "n": 1}, "C": {"k": 0, "n": 0},
@@ -71,20 +71,20 @@ def _without_type_floor():
 
 def test_type_floor_is_optional():
     run = make_run()
-    run["by_type"]["A"] = {"k": 0, "n": 2}  # 유형별 하한이 없으면 유형 단위는 검사하지 않는다(전체 통과율은 그대로)
+    run["by_type"]["A"] = {"k": 0, "n": 2}  # 유형별 하한이 없으면 유형 단위는 검사하지 않음(전체 통과율은 그대로)
     assert gate.check(run, _without_type_floor()) == []
 
 
 def test_type_floor_present_but_missing_a_type_fails():
     base = copy.deepcopy(BASELINE)
-    del base["thresholds"]["type_floor"]["A"]  # A는 이번 실행에 문항이 있다
+    del base["thresholds"]["type_floor"]["A"]  # A는 이번 실행에 문항이 있음
     bad = gate.check(make_run(), base)
     assert bad == ["임계치 미설정: type_floor.A"]
 
 
 def test_type_not_in_run_is_ignored_even_without_floor():
     base = copy.deepcopy(BASELINE)
-    del base["thresholds"]["type_floor"]["C"]  # C는 이번 실행에 문항이 없다(n=0)
+    del base["thresholds"]["type_floor"]["C"]  # C는 이번 실행에 문항이 없음(n=0)
     assert gate.check(make_run(), base) == []
 
 
@@ -136,6 +136,6 @@ def test_main_exits_1_with_reasons_when_failing(tmp_path, capsys):
 
 def test_committed_baseline_has_every_required_threshold():
     base = json.loads(gate.BASELINE.read_text(encoding="utf-8"))
-    # 기준선 이내의 가상 스모크 실행: 사유가 하나라도 나오면 baseline.json에 임계치가 빠졌거나 모양이 틀린 것이다.
+    # 기준선 이내의 가상 스모크 실행: 사유가 하나라도 나오면 baseline.json에 임계치가 빠졌거나 모양이 틀린 것.
     run = make_run(ops={"tokens_in": 6 * 4_000, "llm_calls": 6 * 2})
     assert gate.check(run, base) == []

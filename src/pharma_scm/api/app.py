@@ -49,7 +49,7 @@ class AskRequest(BaseModel):
 
 
 def default_ready_checks():
-    """외부 호출 없이 준비 상태만 본다(DB 연결, API 키 존재)."""
+    """외부 호출 없이 준비 상태만 확인(DB 연결, API 키 존재)."""
     config.load_env()
     checks = {}
     for name, dsn in (("db_readonly", config.RO_DSN), ("db_ext", config.EXT_DSN)):
@@ -64,22 +64,22 @@ def default_ready_checks():
 
 
 def make_real_agent():
-    """진짜 에이전트를 만들어 호출 함수 fn(question, callbacks) -> ask() 결과 dict를 돌려준다.
+    """진짜 에이전트를 만들어 호출 함수 fn(question, callbacks) -> ask() 결과 dict를 돌려줌.
 
-    규정 검색 색인도 여기서 읽어 둔다. 색인이 없거나 문서와 맞지 않으면 첫 요청이 아니라 서버 시작에서 실패한다.
+    규정 검색 색인도 여기서 읽어 둠. 색인이 없거나 문서와 맞지 않으면 첫 요청이 아니라 서버 시작에서 실패.
     """
     sop_index()
     graph = build_graph()
-    # 요청 ID(contextvar, to_thread로 스레드에 복사됨)로 트레이스 ID를 만들어 로그와 트레이스를 잇는다.
+    # 요청 ID(contextvar, to_thread로 스레드에 복사됨)로 트레이스 ID를 만들어 로그와 트레이스를 이음.
     return lambda q, cb: ask(q, graph, callbacks=cb,
                              trace={"name": "api_ask", "external_id": request_id_var.get(), "tags": ["api"],
                                     "metadata": {"request_id": request_id_var.get()}})
 
 
 class AgentRunner:
-    """에이전트 호출 함수를 만드는 방법(factory)을 들고 있다가 처음 필요할 때 한 번만 만든다.
+    """에이전트 호출 함수를 만드는 방법(factory)을 들고 있다가 처음 필요할 때 한 번만 만듦.
 
-    호출 함수가 만들어지는 곳은 get() 안의 한 줄뿐이다.
+    호출 함수가 만들어지는 곳은 get() 안의 한 줄뿐.
     """
 
     def __init__(self, factory):
@@ -96,7 +96,7 @@ class AgentRunner:
 
 
 def create_app(settings, agent_factory=None, ready_checks=None):
-    """agent_factory() -> fn(question, callbacks). 기본은 진짜 에이전트, 테스트는 가짜를 주입한다."""
+    """agent_factory() -> fn(question, callbacks). 기본은 진짜 에이전트, 테스트는 가짜를 주입."""
     if not settings.api_keys:
         raise RuntimeError("PHARMA_API_KEY가 설정되지 않았다(인증 없이 서버를 띄우지 않는다)")
     setup_logging()
@@ -106,9 +106,9 @@ def create_app(settings, agent_factory=None, ready_checks=None):
 
     @asynccontextmanager
     async def lifespan(app):
-        agent.get()  # 서버 시작 때 만들어 두면 모델 키가 없을 때 첫 요청이 아니라 시작에서 실패한다
+        agent.get()  # 서버 시작 때 만들어 두면 모델 키가 없을 때 첫 요청이 아니라 시작에서 실패
         yield
-        tracing.flush()  # 종료 때 보내지 않은 트레이스를 보낸다(Langfuse가 꺼져 있으면 아무것도 안 함)
+        tracing.flush()  # 종료 때 보내지 않은 트레이스를 보냄(Langfuse가 꺼져 있으면 아무것도 안 함)
 
     app = FastAPI(title="pharma-scm-agent", lifespan=lifespan)
     key_bytes = [k.encode() for k in settings.api_keys]

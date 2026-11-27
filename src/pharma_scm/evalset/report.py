@@ -1,7 +1,7 @@
-"""run 디렉터리의 결과를 사전 등록한 지표로 집계한다.
+"""run 디렉터리의 결과를 사전 등록한 지표로 집계.
 
 실행: uv run python -m pharma_scm.evalset.report <run_id> [--json 경로]
---json을 주면 같은 집계를 JSON으로도 저장한다(gate.py가 읽는다). 비율은 통과 수 k와 전체 수 n으로 담는다.
+--json을 주면 같은 집계를 JSON으로도 저장(gate.py가 읽음). 비율은 통과 수 k와 전체 수 n으로 담음.
 """
 
 import argparse
@@ -38,7 +38,7 @@ def _kn(k, n):
 
 
 def summarize(run_id):
-    """결과 파일을 집계해 딕셔너리로 돌려준다. 출력은 하지 않는다."""
+    """결과 파일을 집계해 딕셔너리로 돌려줌. 출력은 하지 않음."""
     run_dir = config.ROOT / "data" / "runs" / run_id
     qs = {q["id"]: q for q in load_questions()}
     rs = {p.stem: json.loads(p.read_text(encoding="utf-8")) for p in run_dir.glob("[A-E]*.json")}

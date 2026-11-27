@@ -1,8 +1,8 @@
-"""사용자 확인 샘플 20개의 검토지를 만든다.
+"""사용자 확인 샘플 20개의 검토지를 만듦.
 
 샘플 = 표시된 질의 전부(검증기가 정답과 다른 집합을 골랐거나, 정답과 같아도 메모를 단 것) + 나머지에서 시드 고정 난수로
-뽑은 질의로 20개를 채운다. 표시 여부가 검토에 영향을 주지 않도록 순서는 섞는다. 검토지는 eval/rag/review_sheet_v2.md,
-뽑힌 목록은 eval/rag/review_sample_v2.json에 남긴다(같은 규칙이면 같은 결과가 나온다).
+뽑은 질의로 20개를 채움. 표시 여부가 검토에 영향을 주지 않도록 순서는 섞음. 검토지는 eval/rag/review_sheet_v2.md,
+뽑힌 목록은 eval/rag/review_sample_v2.json에 남김(같은 규칙이면 같은 결과가 나옴).
 
     uv run python -m pharma_scm.retrieval.review_sheet
 """

@@ -6,7 +6,7 @@ from pharma_scm.retrieval.methods import Bm25, TfidfCosine
 
 
 class Fixed:
-    """항상 정해진 순위를 돌려주는 가짜 검색 방식(모델 없이 결합 계산만 시험한다)."""
+    """항상 정해진 순위를 돌려주는 가짜 검색 방식(모델 없이 결합 계산만 시험)."""
 
     def __init__(self, order):
         self.order = order
@@ -28,7 +28,7 @@ def test_rrf_scores_match_formula():
 
 
 def test_rrf_ties_break_by_section_id():
-    # 두 방식이 서로 반대 순서면 점수가 같고, 이때는 id 순이어야 결과가 결정적이다.
+    # 두 방식이 서로 반대 순서면 점수가 같고, 이때는 id 순이어야 결과가 결정적.
     r = Rrf([Fixed(["b", "a"]), Fixed(["a", "b"])])
     assert r.rank("q") == ["a", "b"]
 

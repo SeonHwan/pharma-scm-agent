@@ -1,4 +1,4 @@
-"""openFDA 결품 스냅샷(JSON)을 shortage_events로 적재한다."""
+"""openFDA 결품 스냅샷(JSON)을 shortage_events로 적재."""
 
 import glob
 import json

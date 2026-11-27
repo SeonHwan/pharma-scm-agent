@@ -1,7 +1,7 @@
-"""검색 벤치마크 실행기: R0~R4를 질의 146개에 돌리고 사전 등록된 규칙으로 판정한다.
+"""검색 벤치마크 실행기: R0~R4를 질의 146개에 돌리고 사전 등록된 규칙으로 판정.
 
-LLM API는 호출하지 않는다. 사전 등록 순서상 이 실행은 한 번만 한다: 결과 파일이 이미 있으면 멈추고, 코퍼스나 질의가
-등록된 md5와 다르면 시작하지 않는다. 결과를 본 뒤 코드를 바꿔 다시 돌리려면 그 사실과 이유를 문서에 적어야 한다.
+LLM API는 호출하지 않음. 사전 등록 순서상 이 실행은 한 번만 함: 결과 파일이 이미 있으면 멈추고, 코퍼스나 질의가
+등록된 md5와 다르면 시작하지 않음. 결과를 본 뒤 코드를 바꿔 다시 돌리려면 그 사실과 이유를 문서에 적어야 함.
 
     uv run python -m pharma_scm.retrieval.run_benchmark
 """
@@ -24,7 +24,7 @@ from .models import DENSE_MODEL, RERANK_MODEL, load_dense, pick_device
 from .rerank import Reranker
 
 RESULT = config.ROOT / "eval" / "rag" / "benchmark_results.json"
-WARMUP = 5  # 지연 측정에서 버리는 준비 호출 수(GPU 초기화, 캐시). 순위 결과에는 영향이 없다
+WARMUP = 5  # 지연 측정에서 버리는 준비 호출 수(GPU 초기화, 캐시). 순위 결과에는 영향이 없음
 CLASSES = {
     "전체": lambda it: True,
     "낮은 겹침": lambda it: it["low_overlap"],
@@ -50,7 +50,7 @@ def timed(fn):
 
 
 def build(sections):
-    """방식 5개를 만들고 구축 시간을 재서 돌려준다. 모델 로드는 색인 구축과 따로 잰다."""
+    """방식 5개를 만들고 구축 시간을 재서 돌려줌. 모델 로드는 색인 구축과 따로 측정."""
     from sentence_transformers import CrossEncoder
 
     device = pick_device()
@@ -59,14 +59,14 @@ def build(sections):
     r1, build_s["R1"] = timed(lambda: Bm25(sections))
     dense_model, load_s[DENSE_MODEL] = timed(lambda: load_dense(device))
     r2, build_s["R2"] = timed(lambda: DenseBgeM3(sections, model=dense_model))
-    r3 = Rrf([r1, r2])  # 결합 자체는 색인이 없다(질의마다 R1, R2를 실행)
+    r3 = Rrf([r1, r2])  # 결합 자체는 색인이 없음(질의마다 R1, R2를 실행)
     cross, load_s[RERANK_MODEL] = timed(lambda: CrossEncoder(RERANK_MODEL, device=device))
     r4 = Reranker(sections, r3, model=cross)
     return [r0, r1, r2, r3, r4], build_s, load_s, device
 
 
 def run_method(method, items):
-    """질의마다 전체 순위를 구하고 걸린 시간(밀리초)을 잰다. 준비 호출은 시간과 결과에서 모두 버린다."""
+    """질의마다 전체 순위를 구하고 걸린 시간(밀리초)을 측정. 준비 호출은 시간과 결과에서 모두 버림."""
     for it in items[:WARMUP]:
         method.rank(it["query"])
     rankings, ms = [], []

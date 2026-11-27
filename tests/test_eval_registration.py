@@ -7,8 +7,8 @@ from pharma_scm.agent import prompt
 ROOT = Path(__file__).resolve().parents[1]
 REGISTERED = json.loads((ROOT / "eval" / "registered.json").read_text(encoding="utf-8"))
 
-# 평가 결과는 "어떤 문항·어떤 프롬프트로 측정했는가"가 고정돼 있어야 비교할 수 있다.
-# 의도한 변경이면 PROMPT_VERSION을 올리고 registered.json과 baseline을 PR로 갱신한다.
+# 평가 결과는 "어떤 문항·어떤 프롬프트로 측정했는가"가 고정돼 있어야 비교할 수 있음.
+# 의도한 변경이면 PROMPT_VERSION을 올리고 registered.json과 baseline을 PR로 갱신.
 HINT = "의도한 변경이면 PROMPT_VERSION을 올리고 eval/registered.json과 baseline을 PR로 갱신한다."
 
 

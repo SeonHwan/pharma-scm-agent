@@ -52,7 +52,7 @@ def test_unknown_id_exits_with_usage_error(capsys):
 
 @pytest.fixture
 def failing_run(monkeypatch, tmp_path):
-    """모든 문항이 예외로 실패하는 실행(API 호출 없음). 결과는 임시 폴더에 쓴다."""
+    """모든 문항이 예외로 실패하는 실행(API 호출 없음). 결과는 임시 폴더에 기록."""
     monkeypatch.setattr(run_eval.config, "ROOT", tmp_path)
     monkeypatch.setattr(run_eval, "build_graph", lambda: None)
     monkeypatch.setattr(run_eval, "run_one", lambda q, graph, out_dir, *rest: {

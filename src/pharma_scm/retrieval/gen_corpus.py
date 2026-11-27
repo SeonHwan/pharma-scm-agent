@@ -1,7 +1,7 @@
-"""규정 검색 벤치마크의 새 SOP 문서를 Claude로 생성한다.
+"""규정 검색 벤치마크의 새 SOP 문서를 Claude로 생성.
 
-기본은 --dry-run이라 API를 부르지 않고 호출 수와 토큰·비용 추정만 보여 준다. 실제 호출은 --run을 줘야 한다.
-이미 만든 파일은 건드리지 않는다(--force로만 덮어쓴다). 생성한 파일은 고정해서 쓰고 다시 만들지 않는다.
+기본은 --dry-run이라 API를 부르지 않고 호출 수와 토큰·비용 추정만 보여 줌. 실제 호출은 --run을 줘야 함.
+이미 만든 파일은 건드리지 않음(--force로만 덮어씀). 생성한 파일은 고정해서 쓰고 다시 만들지 않음.
 
     uv run python -m pharma_scm.retrieval.gen_corpus                # 추정만
     uv run python -m pharma_scm.retrieval.gen_corpus --only 11 --run  # 문서 하나만 실제 생성(시험)
@@ -17,12 +17,12 @@ from .. import config
 from . import topics
 
 MODEL = "claude-sonnet-5-5"  # 사전 등록 9-1: 코퍼스 생성 모델
-EFFORT = "medium"  # 생각 깊이. 글쓰기 작업이라 기본(high)보다 낮춰 출력 토큰을 줄인다
+EFFORT = "medium"  # 생각 깊이. 글쓰기 작업이라 기본(high)보다 낮춰 출력 토큰을 줄임
 MAX_TOKENS = 8000
-# 단가(100만 토큰당 달러). 2026-11-03에 확인한 값이라 바뀌었을 수 있다.
+# 단가(100만 토큰당 달러). 2026-11-03에 확인한 값이라 바뀌었을 수 있음.
 PRICE_IN, PRICE_OUT = 2.0, 10.0
 
-OUT_DIR = config.SOP_DIR  # 생성 당시에는 eval/rag/corpus_v2/였고 이후 sop/로 합쳤다(protocol 9-9)
+OUT_DIR = config.SOP_DIR  # 생성 당시에는 eval/rag/corpus_v2/였고 이후 sop/로 합침(protocol 9-9)
 LOG_PATH = config.ROOT / "eval" / "rag" / "generation_log.jsonl"
 NOTICE = "> 이 문서는 포트폴리오용 합성 SOP이며 실제 GMP·사내 규정이 아니다."
 
@@ -65,12 +65,12 @@ PROMPT = """새 SOP 문서를 하나 쓴다.
 GENERIC_TITLES = {"개요", "일반 원칙", "목적", "적용 범위", "총칙", "기본 원칙"}
 H1 = re.compile(r"^# (SOP-\d+) (.+)$")
 H2 = re.compile(r"^## (SOP-\d+-\d+) (.+)$")
-# 수치와 단위(예: 10분, 2~8도, 영업일 기준 5영업일, 3년). 같은 문서 안의 중복 확인에 쓴다.
+# 수치와 단위(예: 10분, 2~8도, 영업일 기준 5영업일, 3년). 같은 문서 안의 중복 확인에 씀.
 FACT = re.compile(r"\d+(?:~\d+)?\s*(?:영업일|도|분|시간|일|주|개월|년|회|%|퍼센트)")
 
 
 def n_sections(no):
-    """문서마다 8개 또는 9개. 번호의 홀짝으로 정해 실행마다 같다."""
+    """문서마다 8개 또는 9개. 번호의 홀짝으로 정해 실행마다 같음."""
     lo, hi = topics.SECTIONS_PER_DOC
     return hi if no % 2 else lo
 
@@ -95,10 +95,10 @@ def build_prompt(doc):
 
 
 def validate(text, doc):
-    """형식과 규칙을 코드로 검사한다. (심각한 문제, 경고)를 돌려준다. 심각한 문제가 있으면 .rejected로 저장한다.
+    """형식과 규칙을 코드로 검사. (심각한 문제, 경고)를 돌려줌. 심각한 문제가 있으면 .rejected로 저장.
 
-    경고는 사람이 볼 것이다: 숫자가 없는 섹션(승인자나 조건이 고유 사실일 수 있다), 한 문서 안에서 같은 수치와
-    단위가 둘 이상의 섹션에 나오는 경우(질의 하나에 여러 섹션이 맞을 수 있다).
+    경고는 사람이 볼 것: 숫자가 없는 섹션(승인자나 조건이 고유 사실일 수 있음), 한 문서 안에서 같은 수치와
+    단위가 둘 이상의 섹션에 나오는 경우(질의 하나에 여러 섹션이 맞을 수 있음).
     """
     problems, warnings = [], []
     no, k = doc["no"], n_sections(doc["no"])
@@ -155,7 +155,7 @@ def dry_run(docs):
         tot_out += out_chars
         print(f"  SOP-{d['no']} {d['heading']}: 호출 1회, 입력 약 {chars:,}자, 출력 약 {out_chars:,}자")
     print(f"호출 {len(docs)}회, 입력 {tot_in:,}자, 출력 {tot_out:,}자")
-    # 출력에는 생각(thinking) 토큰이 더해진다. 글자 수 추정의 2배까지를 상한으로 본다.
+    # 출력에는 생각(thinking) 토큰이 더해짐. 글자 수 추정의 2배까지를 상한으로 봄.
     lo = tot_in / 2 / 1e6 * PRICE_IN + tot_out / 2 / 1e6 * PRICE_OUT
     hi = tot_in / 1e6 * PRICE_IN + tot_out * 2 / 1e6 * PRICE_OUT
     print(f"비용 추정: ${lo:.2f} ~ ${hi:.2f}(생각 토큰 포함 상한). 실제는 첫 호출의 usage로 다시 계산한다.")

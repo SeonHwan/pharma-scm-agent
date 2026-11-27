@@ -39,17 +39,17 @@ def wrong_text(q):
 
 
 def test_oracle_passes_all():
-    """114문항 모두에서 정답 문장은 채점기를 통과한다(정답을 틀렸다고 하지 않음)."""
+    """114문항 모두에서 정답 문장은 채점기를 통과(정답을 틀렸다고 하지 않음)."""
     assert [q["id"] for q in QS if not grade_answer(q, gold_text(q))[0]] == []
 
 
 def test_wrong_fails_all():
-    """114문항 모두에서 일부러 틀린 답은 채점기를 통과하지 못한다(오답을 맞았다고 하지 않음)."""
+    """114문항 모두에서 일부러 틀린 답은 채점기를 통과하지 못함(오답을 맞았다고 하지 않음)."""
     assert [q["id"] for q in QS if grade_answer(q, wrong_text(q))[0]] == []
 
 
 def test_final_line_uses_last_and_requires_marker():
-    """'최종 답:' 표지가 없으면 답으로 보지 않고, 여러 개면 마지막 것만 읽는다(앞부분 본문에 속지 않음)."""
+    """'최종 답:' 표지가 없으면 답으로 보지 않고, 여러 개면 마지막 것만 읽음(앞부분 본문에 속지 않음)."""
     assert final_line("최종 답: 1\n최종 답: 2") == "2"
     assert final_line("답은 2") is None
 

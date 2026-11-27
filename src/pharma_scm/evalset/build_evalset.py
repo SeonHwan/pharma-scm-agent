@@ -1,4 +1,4 @@
-"""질문 템플릿 + 값 치환으로 평가셋을 만들고, 정답은 DB에서 계산한다(사람 라벨링 없음).
+"""질문 템플릿 + 값 치환으로 평가셋을 만들고, 정답은 DB에서 계산(사람 라벨링 없음).
 
 실행: uv run python -m pharma_scm.evalset.build_evalset  → eval/questions.jsonl
 """
@@ -106,7 +106,7 @@ def build(conn):
              f"가용 로트는 몇 개인가?",
              f"SELECT count(*) FROM inventory_lots WHERE lot_status='available' AND "
              f"expiry_date BETWEEN DATE '{AO}' AND DATE '{end}'", boundary=True)
-    # 정답이 0으로 치우치지 않게 양수 7개 + 0 1개로 맞춘다(일부 SKU는 최근 판매가 없다).
+    # 정답이 0으로 치우치지 않게 양수 7개 + 0 1개로 맞춤(일부 SKU는 최근 판매가 없음).
     skus_all = col("SELECT sku FROM products ORDER BY 1")
     r.shuffle(skus_all)
     pos, zeros = [], []

@@ -48,10 +48,10 @@ class TimingCallback(BaseCallbackHandler):
 
 
 class UsageCallback(BaseCallbackHandler):
-    """실행 하나에서 일어난 모든 LLM 호출의 토큰과 모든 도구 호출 이름을 모은다.
+    """실행 하나에서 일어난 모든 LLM 호출의 토큰과 모든 도구 호출 이름을 모음.
 
-    멀티 에이전트는 전문가 에이전트가 도구 안에서 따로 LLM을 부르므로, 최종 메시지만 보면 그 호출이 빠진다.
-    콜백은 하위 실행에도 전달되므로 단일·멀티 모두 같은 방식으로 센다. input은 캐시 읽기·쓰기를 포함한 합계다.
+    멀티 에이전트는 전문가 에이전트가 도구 안에서 따로 LLM을 부르므로, 최종 메시지만 보면 그 호출이 빠짐.
+    콜백은 하위 실행에도 전달되므로 단일·멀티 모두 같은 방식으로 셈. input은 캐시 읽기·쓰기를 포함한 합계.
     """
 
     def __init__(self):
@@ -69,7 +69,7 @@ class UsageCallback(BaseCallbackHandler):
                     self.tokens["input"] += u.get("input_tokens", 0)
                     self.tokens["output"] += u.get("output_tokens", 0)
                     self.tokens["cache_read"] += d.get("cache_read") or 0
-                    # langchain-anthropic은 TTL별 값이 있으면 쓰기 토큰을 ephemeral_5m/1h에 넣고 cache_creation을 0으로 둔다.
+                    # langchain-anthropic은 TTL별 값이 있으면 쓰기 토큰을 ephemeral_5m/1h에 넣고 cache_creation을 0으로 둠.
                     self.tokens["cache_write"] += sum(d.get(k) or 0 for k in (
                         "cache_creation", "ephemeral_5m_input_tokens", "ephemeral_1h_input_tokens"))
 

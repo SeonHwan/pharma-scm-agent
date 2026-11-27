@@ -6,12 +6,12 @@ from pharma_scm.retrieval import corpus
 from pharma_scm.retrieval.methods import Bm25
 from pharma_scm.retrieval.rerank import Reranker
 
-# 실제 리랭커(약 2GB)를 내려받아 쓰는 시험은 RUN_MODEL_TESTS=1일 때만 돌린다(CI 기본은 건너뜀).
+# 실제 리랭커(약 2GB)를 내려받아 쓰는 시험은 RUN_MODEL_TESTS=1일 때만 돌림(CI 기본은 건너뜀).
 needs_model = pytest.mark.skipif(not os.environ.get("RUN_MODEL_TESTS"), reason="RUN_MODEL_TESTS=1일 때만 실행")
 
 
 class FakeModel:
-    """점수를 정해 둔 가짜 교차 인코더(재정렬과 꼬리 처리 로직만 시험한다)."""
+    """점수를 정해 둔 가짜 교차 인코더(재정렬과 꼬리 처리 로직만 시험)."""
 
     def __init__(self, by_text):
         self.by_text = by_text
@@ -26,7 +26,7 @@ def test_rerank_reorders_head_and_keeps_tail():
     query = "냉장 보관 온도 기록"
     order = base.rank(query)
     last_of_head = secs_by_id(secs)[order[4]]
-    # 후보 5개 중 5위에 가장 높은 점수를 준다 -> 5위가 1위가 되고 나머지 순서는 유지된다.
+    # 후보 5개 중 5위에 가장 높은 점수를 준다 -> 5위가 1위가 되고 나머지 순서는 유지됨.
     model = FakeModel({corpus.section_text(last_of_head): 1.0})
     r = Reranker(secs, base, model=model, top_n=5)
     got = r.rank(query)

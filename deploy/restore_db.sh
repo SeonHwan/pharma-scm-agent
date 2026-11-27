@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# DB 컨테이너가 떠 있는 상태에서 읽기 전용 역할을 만들고 덤프를 복원한다(처음 한 번만 실행).
-# 사용:  deploy/restore_db.sh pharma.sql.gz        (저장소 루트 어디서 불러도 된다)
-# 환경: deploy/deploy.env 의 DB_RO_PASSWORD, DB_EXT_PASSWORD 를 쓴다. 다른 파일은 ENV_FILE=경로 로 지정.
+# DB 컨테이너가 떠 있는 상태에서 읽기 전용 역할을 만들고 덤프를 복원(처음 한 번만 실행).
+# 사용:  deploy/restore_db.sh pharma.sql.gz        (저장소 루트 어디서 불러도 됨)
+# 환경: deploy/deploy.env 의 DB_RO_PASSWORD, DB_EXT_PASSWORD 를 사용. 다른 파일은 ENV_FILE=경로 로 지정.
 set -euo pipefail
 
 DUMP="$(cd "$(dirname "${1:?덤프 파일 경로(pharma.sql.gz)를 인자로 주세요}")" && pwd)/$(basename "$1")"

@@ -1,7 +1,7 @@
-"""검색 벤치마크 질의(최종 v2 126개 + 기존 규정 문항 20개)를 읽고 어휘 겹침 부류를 나눈다.
+"""검색 벤치마크 질의(최종 v2 126개 + 기존 규정 문항 20개)를 읽고 어휘 겹침 부류 구분.
 
-부류 규칙은 사전 등록된 대로다: 겹침 비율이 전체 질의의 중앙값 이하면 낮은 겹침, 나머지는 높은 겹침.
-기존 규정 문항은 v1 문항으로 따로 표시한다(부류 계산에는 함께 들어간다).
+부류 규칙은 사전 등록된 대로: 겹침 비율이 전체 질의의 중앙값 이하면 낮은 겹침, 나머지는 높은 겹침.
+기존 규정 문항은 v1 문항으로 따로 표시(부류 계산에는 함께 들어감).
 
     uv run python -m pharma_scm.retrieval.benchmark_data     # 개수와 부류 분포 출력
 """
@@ -17,7 +17,7 @@ QUESTIONS = config.ROOT / "eval" / "questions.jsonl"
 
 
 def load_v1():
-    """eval/questions.jsonl의 규정 문항(C001~C020). 정답 섹션이 하나인 문항만 있다."""
+    """eval/questions.jsonl의 규정 문항(C001~C020). 정답 섹션이 하나인 문항만 있음."""
     out = []
     for line in QUESTIONS.read_text(encoding="utf-8").splitlines():
         r = json.loads(line)

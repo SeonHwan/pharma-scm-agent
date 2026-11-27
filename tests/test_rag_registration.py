@@ -5,7 +5,7 @@ from pharma_scm.retrieval import finalize_queries, register
 
 REGISTERED = json.loads(register.REGISTERED.read_text(encoding="utf-8"))
 
-# 검색 평가 결과는 "어떤 코퍼스로 측정했는가"가 고정돼 있어야 비교할 수 있다.
+# 검색 평가 결과는 "어떤 코퍼스로 측정했는가"가 고정돼 있어야 비교할 수 있음.
 HINT = ("의도한 변경이면 `uv run python -m pharma_scm.retrieval.register`로 다시 등록하고 "
         "사전 등록 문서에 새 날짜의 절로 이유를 적는다.")
 

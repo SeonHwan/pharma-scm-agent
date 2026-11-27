@@ -1,7 +1,7 @@
-"""시스템 프롬프트. 평가 실행 전에 동결한다 — 바꾸면 PROMPT_VERSION을 올리고 결과를 섞지 않는다.
+"""시스템 프롬프트. 평가 실행 전에 동결 — 바꾸면 PROMPT_VERSION을 올리고 결과를 섞지 않음.
 
-멀티 에이전트(agent/multi.py)가 같은 문구를 나눠 쓰도록 절(section)별 상수로 두고, SYSTEM_PROMPT는 그 합이다
-(합친 문자열은 나누기 전과 바이트 단위로 같고 PROMPT_SHA도 같다).
+멀티 에이전트(agent/multi.py)가 같은 문구를 나눠 쓰도록 절(section)별 상수로 두고, SYSTEM_PROMPT는 그 합
+(합친 문자열은 나누기 전과 바이트 단위로 같고 PROMPT_SHA도 같음).
 """
 
 import hashlib

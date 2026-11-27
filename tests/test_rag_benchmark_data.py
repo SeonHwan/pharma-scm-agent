@@ -14,7 +14,7 @@ def test_gold_sections_exist():
 
 
 def test_low_overlap_is_at_or_below_median():
-    # 사전 등록 규칙: 중앙값 이하가 낮은 겹침. 경계값이 높은 겹침으로 새지 않아야 한다.
+    # 사전 등록 규칙: 중앙값 이하가 낮은 겹침. 경계값이 높은 겹침으로 새지 않아야 함.
     items = benchmark_data.load_benchmark()
     low = [it["overlap"] for it in items if it["low_overlap"]]
     high = [it["overlap"] for it in items if not it["low_overlap"]]

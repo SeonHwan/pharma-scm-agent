@@ -36,7 +36,7 @@ line-length = 100
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
-# 운영(Fargate)에는 GPU가 없어서 PyTorch는 CPU 빌드를 쓴다(CUDA 빌드는 수 GB가 더 크다).
+# 운영(Fargate)에는 GPU가 없어서 PyTorch는 CPU 빌드를 사용(CUDA 빌드는 수 GB가 더 큼).
 [tool.uv.sources]
 torch = [{ index = "pytorch-cpu" }]
 

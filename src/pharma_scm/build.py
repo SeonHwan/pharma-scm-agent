@@ -1,4 +1,4 @@
-"""전체 데이터를 처음부터 다시 만든다(멱등). 실행: uv run python -m pharma_scm.build"""
+"""전체 데이터를 처음부터 다시 생성(멱등). 실행: uv run python -m pharma_scm.build"""
 
 
 import psycopg

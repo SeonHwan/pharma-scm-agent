@@ -1,12 +1,12 @@
 """검색 벤치마크의 지표 계산과 사전 등록된 채택 규칙.
 
-모델이나 파일을 읽지 않는 순수 계산이라 작은 가짜 데이터로 시험할 수 있다.
+모델이나 파일을 읽지 않는 순수 계산이라 작은 가짜 데이터로 시험할 수 있음.
 """
 
 import math
 
 Z95 = 1.96
-GAIN_PP = 0.10  # 낮은 겹침 recall@3이 R0보다 10%p 이상 높아야 한다
+GAIN_PP = 0.10  # 낮은 겹침 recall@3이 R0보다 10%p 이상 높아야 함
 P95_LIMIT_MS = {"R3": 1000, "R4": 2000}  # 질의당 p95 지연 상한(밀리초)
 
 
@@ -28,7 +28,7 @@ def percentile(values, q):
 
 
 def summarize(ranks):
-    """정답 섹션의 순위(1부터) 목록에서 recall@1, recall@3(개수), MRR을 만든다."""
+    """정답 섹션의 순위(1부터) 목록에서 recall@1, recall@3(개수), MRR을 만듦."""
     n = len(ranks)
     return {"n": n, "k1": sum(r <= 1 for r in ranks), "k3": sum(r <= 3 for r in ranks),
             "mrr": sum(1 / r for r in ranks) / n if n else 0.0}
@@ -42,7 +42,7 @@ def decide(low_stats, p95_ms):
     """사전 등록 규칙 §6. low_stats: {방식: 낮은 겹침 부류 summarize 결과}, p95_ms: {방식: 지연 p95}.
 
     후보 R3, R4 각각이 (1) R0보다 낮은 겹침 recall@3이 10%p 이상 높고 두 Wilson 구간이 겹치지 않으며
-    (2) p95 지연이 상한 미만이어야 채택 후보다. 둘 다 통과하면 더 단순한 R3, 하나도 없으면 R0를 유지한다.
+    (2) p95 지연이 상한 미만이어야 채택 후보. 둘 다 통과하면 더 단순한 R3, 하나도 없으면 R0를 유지.
     """
     base = low_stats["R0"]
     base_lo, base_hi = wilson(base["k3"], base["n"])

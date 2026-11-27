@@ -1,4 +1,4 @@
-"""JSON 한 줄 로그. 요청 ID는 contextvar로 들고 다녀 스레드 안에서도 같은 ID가 붙는다."""
+"""JSON 한 줄 로그. 요청 ID는 contextvar로 들고 다녀 스레드 안에서도 같은 ID가 붙음."""
 
 import contextvars
 import json
@@ -27,7 +27,7 @@ def setup_logging(level=logging.INFO):
     handler.setFormatter(JsonFormatter())
     handler._pharma_json = True
     log = logging.getLogger("pharma")
-    # 이전 호출에서 붙인 우리 핸들러만 교체한다(다른 핸들러는 건드리지 않는다)
+    # 이전 호출에서 붙인 우리 핸들러만 교체(다른 핸들러는 건드리지 않음)
     log.handlers[:] = [h for h in log.handlers if not getattr(h, "_pharma_json", False)] + [handler]
     log.setLevel(level)
     log.propagate = False

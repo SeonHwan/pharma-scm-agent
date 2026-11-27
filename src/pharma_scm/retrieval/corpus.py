@@ -1,4 +1,4 @@
-"""규정 코퍼스(sop/ 문서 전체)를 섹션 단위로 읽고, 질의와 섹션의 어휘 겹침을 계산한다."""
+"""규정 코퍼스(sop/ 문서 전체)를 섹션 단위로 읽고, 질의와 섹션의 어휘 겹침을 계산."""
 
 import re
 
@@ -9,7 +9,7 @@ H2 = re.compile(r"^## (SOP-\d+-\d+) (.+)$")
 
 
 def parse_text(text):
-    """문서 하나를 섹션 목록으로 바꾼다. 항목: section_id, doc_id, doc_title, title, body."""
+    """문서 하나를 섹션 목록으로 바꿈. 항목: section_id, doc_id, doc_title, title, body."""
     doc_id = doc_title = None
     secs, cur = [], None
     for line in text.splitlines():

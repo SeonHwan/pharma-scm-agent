@@ -41,7 +41,7 @@ def test_decide_adopts_only_when_gain_and_intervals_and_latency_hold():
 
 
 def test_decide_keeps_r0_when_intervals_overlap():
-    # 10%p 이상 높아도(40 vs 48 -> +10.8%p) 구간이 겹치면 채택하지 않는다
+    # 10%p 이상 높아도(40 vs 48 -> +10.8%p) 구간이 겹치면 채택하지 않음
     low = {"R0": stat(40), "R3": stat(48), "R4": stat(49)}
     r = metrics.decide(low, FAST)
     assert r["details"]["R3"]["gain_ok"] and not r["details"]["R3"]["ci_ok"]

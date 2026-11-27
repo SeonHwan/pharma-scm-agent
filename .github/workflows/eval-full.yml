@@ -1,8 +1,8 @@
 name: eval-full
 
-# 수동 전체 평가(114문항). 실제 LLM을 호출한다: 1회 약 58.7만 입력 토큰, 호출 약 225회(v1 실측).
-# eval/baseline.json의 임계치는 스모크 6문항용이라 여기서는 게이트를 적용하지 않는다. 집계와 결과를 보관하고,
-# 기준선 갱신 PR의 근거로 쓴다.
+# 수동 전체 평가(114문항). 실제 LLM을 호출: 1회 약 58.7만 입력 토큰, 호출 약 225회(v1 실측).
+# eval/baseline.json의 임계치는 스모크 6문항용이라 여기서는 게이트를 적용하지 않음. 집계와 결과를 보관하고,
+# 기준선 갱신 PR의 근거로 사용.
 on:
   workflow_dispatch:
     inputs:
@@ -11,7 +11,7 @@ on:
         type: boolean
         default: false
 
-# 전체 평가가 동시에 둘 돌지 않게 한다. 진행 중인 것은 취소하지 않는다.
+# 전체 평가가 동시에 둘 돌지 않게 함. 진행 중인 것은 취소하지 않음.
 concurrency:
   group: eval-full
   cancel-in-progress: false
@@ -21,7 +21,7 @@ permissions:
 
 jobs:
   full:
-    # 비용 승인 체크가 없으면 실행하지 않는다.
+    # 비용 승인 체크가 없으면 실행하지 않음.
     if: inputs.approve_cost
     runs-on: ubuntu-24.04
     timeout-minutes: 60

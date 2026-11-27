@@ -1,4 +1,4 @@
-"""키별 슬라이딩 윈도 rate limit. 프로세스 메모리에만 있다(여러 프로세스 간 공유 안 됨)."""
+"""키별 슬라이딩 윈도 rate limit. 프로세스 메모리에만 있음(여러 프로세스 간 공유 안 됨)."""
 
 import threading
 import time

@@ -1,9 +1,9 @@
 """GPU 없는 환경(ECS Fargate)을 가정한 CPU 지연과 메모리 측정(4).
 
-사전 등록 실행(run_benchmark)과는 별개의 "배포 환경 확인"이다. 같은 질의에 R2, R3, R4를 CPU로 돌려
-(1) 질의당 지연을 스레드 수별로, (2) 모델을 올린 프로세스의 최대 메모리를, (3) GPU 실행과 순위가 같은지를 본다.
-스레드 수는 Fargate vCPU 수의 근사일 뿐이다(vCPU는 시간을 나눠 쓰고 CPU 종류도 다르다). 0.5 vCPU는 1스레드보다
-느릴 수 있다. LLM API는 호출하지 않는다.
+사전 등록 실행(run_benchmark)과는 별개의 "배포 환경 확인". 같은 질의에 R2, R3, R4를 CPU로 돌려
+(1) 질의당 지연을 스레드 수별로, (2) 모델을 올린 프로세스의 최대 메모리를, (3) GPU 실행과 순위가 같은지를 봄.
+스레드 수는 Fargate vCPU 수의 근사일 뿐임(vCPU는 시간을 나눠 쓰고 CPU 종류도 다름). 0.5 vCPU는 1스레드보다
+느릴 수 있음. LLM API는 호출하지 않음.
 
     PHARMA_DEVICE=cpu uv run python -m pharma_scm.retrieval.cpu_check
 """
@@ -29,7 +29,7 @@ OUT = config.ROOT / "eval" / "rag" / "latency_cpu.json"
 
 
 def peak_rss_mb():
-    """프로세스가 지금까지 쓴 최대 상주 메모리(MB). 리눅스에서 ru_maxrss는 KB 단위다."""
+    """프로세스가 지금까지 쓴 최대 상주 메모리(MB). 리눅스에서 ru_maxrss는 KB 단위."""
     return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
 
 

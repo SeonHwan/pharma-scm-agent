@@ -1,4 +1,4 @@
-"""query_db에 들어온 SQL을 실행 전에 검사한다. DB 계정(pharma_ro)의 권한 제한과 별개의 1차 방어선."""
+"""query_db에 들어온 SQL을 실행 전에 검사. DB 계정(pharma_ro)의 권한 제한과 별개의 1차 방어선."""
 
 import sqlglot
 from sqlglot import exp
@@ -14,7 +14,7 @@ class SqlRejected(ValueError):
 
 
 def validate(sql):
-    """통과하면 정규화된 SQL 문자열을, 아니면 SqlRejected를 낸다."""
+    """통과하면 정규화된 SQL 문자열을, 아니면 SqlRejected를 냄."""
     try:
         stmts = [s for s in sqlglot.parse(sql, dialect="postgres") if s is not None]
     except sqlglot.errors.SqlglotError as e:

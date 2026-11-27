@@ -5,7 +5,7 @@ on:
   pull_request:
 
 jobs:
-  # 린트와 테스트. 환경 준비(Postgres, uv, 의존성, DB 복원)는 재사용 워크플로 _checks.yml이 한다.
+  # 린트와 테스트. 환경 준비(Postgres, uv, 의존성, DB 복원)는 재사용 워크플로 _checks.yml이 담당.
   test:
     uses: ./.github/workflows/_checks.yml
     with:

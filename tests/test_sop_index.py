@@ -7,8 +7,8 @@ from pharma_scm.agent import tools
 from pharma_scm.retrieval import corpus, index
 from pharma_scm.retrieval.register import md5_map
 
-# 모델 없이 검색 흐름을 시험한다: 섹션마다 고유한 축을 가진 가짜 벡터와, 질의 문자열에 섹션 id가 있으면
-# 그 축을 가리키는 가짜 질의 임베딩을 쓴다.
+# 모델 없이 검색 흐름을 시험: 섹션마다 고유한 축을 가진 가짜 벡터와, 질의 문자열에 섹션 id가 있으면
+# 그 축을 가리키는 가짜 질의 임베딩을 사용.
 
 
 def fake_index():

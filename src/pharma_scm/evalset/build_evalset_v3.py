@@ -1,11 +1,11 @@
 """평가셋 v3: 단일 에이전트가 실제로 틀릴 만한 문항.
 
-- X: 여러 도구·여러 대상. 외부 결품 상태(get_shortage, 성분마다 호출)와 DB 조건을 합친다. 정답은 SKU 집합 등.
-- Y: 규정과 데이터를 함께. DB로 구한 SKU 집합(또는 수치)과 근거 규정 섹션을 둘 다 맞혀야 한다.
-- Z: 문서 모순. 규정 문서끼리 값이 다른 주제에서 모순되는 섹션을 모두 밝혀야 한다.
+- X: 여러 도구·여러 대상. 외부 결품 상태(get_shortage, 성분마다 호출)와 DB 조건을 합침. 정답은 SKU 집합 등.
+- Y: 규정과 데이터를 함께. DB로 구한 SKU 집합(또는 수치)과 근거 규정 섹션을 둘 다 맞혀야 함.
+- Z: 문서 모순. 규정 문서끼리 값이 다른 주제에서 모순되는 섹션을 모두 밝혀야 함.
 
-정답은 DB와 결품 스냅샷에서 계산한다(결품 상태 규칙은 v1과 같다: 결품 중 > 단종 예정 > 해소됨 > 기록 없음).
---pilot, --pilot2는 판정에 쓰지 않는 파일럿 문항, --main은 본 평가 30문항(eval/questions_v3.jsonl)을 만든다.
+정답은 DB와 결품 스냅샷에서 계산(결품 상태 규칙은 v1과 같음: 결품 중 > 단종 예정 > 해소됨 > 기록 없음).
+--pilot, --pilot2는 판정에 쓰지 않는 파일럿 문항, --main은 본 평가 30문항(eval/questions_v3.jsonl)을 만듦.
 
 실행: uv run python -m pharma_scm.evalset.build_evalset_v3 --main
 """
@@ -128,7 +128,7 @@ def pilot2(conn):
 
 
 def main_set(conn):
-    """본 평가 30문항(X 12, Y 8, Z 2, L 8). 파일럿과 같은 조건 조합은 쓰지 않는다."""
+    """본 평가 30문항(X 12, Y 8, Z 2, L 8). 파일럿과 같은 조건 조합은 쓰지 않음."""
     f = load_facts(conn)
     lab = {x["sku"]: x["label"] for x in f}
     quar = skus(conn, "SELECT DISTINCT sku FROM inventory_lots WHERE lot_status = 'quarantine'")

@@ -23,6 +23,6 @@ BAD = [
 
 @pytest.mark.parametrize("sql", BAD)
 def test_rejects_dangerous_or_invalid(sql):
-    """쓰기·삭제, 여러 문장, 허용 밖 테이블, 시스템 함수, 문법 오류 SQL은 모두 거부한다(DB 변조·유출 방지)."""
+    """쓰기·삭제, 여러 문장, 허용 밖 테이블, 시스템 함수, 문법 오류 SQL은 모두 거부(DB 변조·유출 방지)."""
     with pytest.raises(SqlRejected):
         validate(sql)

@@ -1,4 +1,4 @@
-"""에이전트 도구 3개. 각 도구는 문자열(JSON)을 돌려주고, 오류도 예외 대신 문자열로 알려 모델이 고치게 한다."""
+"""에이전트 도구 3개. 각 도구는 문자열(JSON)을 돌려주고, 오류도 예외 대신 문자열로 알려 모델이 고치게 함."""
 
 import json
 from collections import Counter
@@ -76,7 +76,7 @@ def run_get_shortage(generic_name, dsn=None):
 
 @lru_cache(maxsize=1)
 def sop_index():
-    """규정 검색 색인(sop/ 문서, R3). 서버 시작 때 한 번 읽는다(api.app.make_real_agent)."""
+    """규정 검색 색인(sop/ 문서, R3). 서버 시작 때 한 번 읽음(api.app.make_real_agent)."""
     from ..retrieval import index
 
     return index.load()

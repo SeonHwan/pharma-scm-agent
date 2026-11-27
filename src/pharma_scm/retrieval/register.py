@@ -1,9 +1,9 @@
-"""규정 문서(sop/)와 벤치마크 질의의 고정 파일 목록과 md5를 eval/rag/registered.json에 등록한다.
+"""규정 문서(sop/)와 벤치마크 질의의 고정 파일 목록과 md5를 eval/rag/registered.json에 등록.
 
     uv run python -m pharma_scm.retrieval.register
 
-등록은 파일을 고정하는 순간에만 한다. 등록 뒤에 파일이 바뀌면 tests/test_rag_registration.py가 실패한다.
-의도한 변경이면 이 명령으로 다시 등록하고, 사전 등록 문서에 새 날짜의 절로 이유를 적는다.
+등록은 파일을 고정하는 순간에만 함. 등록 뒤에 파일이 바뀌면 tests/test_rag_registration.py가 실패.
+의도한 변경이면 이 명령으로 다시 등록하고, 사전 등록 문서에 새 날짜의 절로 이유를 적음.
 """
 
 import hashlib
@@ -15,7 +15,7 @@ REGISTERED = config.ROOT / "eval" / "rag" / "registered.json"
 
 
 def corpus_files():
-    """코퍼스 = sop/ 문서 전체. 서비스하는 규정 문서와 벤치마크가 같은 파일을 쓴다."""
+    """코퍼스 = sop/ 문서 전체. 서비스하는 규정 문서와 벤치마크가 같은 파일을 씀."""
     return sorted(config.SOP_DIR.glob("SOP-*.md"))
 
 

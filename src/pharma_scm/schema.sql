@@ -56,7 +56,7 @@ CREATE TABLE purchase_orders (
     status text NOT NULL                  -- 'received' | 'open'
 );
 
--- openFDA 결품 스냅샷 원본. query_db 계정에는 권한을 주지 않는다.
+-- openFDA 결품 스냅샷 원본. query_db 계정에는 권한을 주지 않음.
 CREATE TABLE shortage_events (
     package_ndc text NOT NULL,
     generic_name text NOT NULL,
@@ -92,6 +92,6 @@ REVOKE ALL ON ALL TABLES IN SCHEMA public FROM pharma_ro, pharma_ext;
 GRANT SELECT ON products, sales_orders, suppliers, purchase_orders, inventory_lots TO pharma_ro;
 ALTER ROLE pharma_ro SET default_transaction_read_only = on;
 ALTER ROLE pharma_ro SET statement_timeout = '5s';
--- get_shortage 전용 계정: 결품 스냅샷만 읽는다(규정 문서는 DB가 아니라 sop/ 파일과 검색 색인에 있다).
+-- get_shortage 전용 계정: 결품 스냅샷만 읽음(규정 문서는 DB가 아니라 sop/ 파일과 검색 색인에 있음).
 ALTER ROLE pharma_ext SET default_transaction_read_only = on;
 ALTER ROLE pharma_ext SET statement_timeout = '5s';

@@ -1,4 +1,4 @@
-"""질문 하나를 에이전트에 넣고 답·도구 호출·토큰·지연을 돌려준다.
+"""질문 하나를 에이전트에 넣고 답·도구 호출·토큰·지연을 돌려줌.
 
 실행: uv run python -m pharma_scm.agent.run "질문"  [--dry-run] [--trace]
 """
@@ -25,11 +25,11 @@ def _text(content):
 
 def ask(question, graph=None, callbacks=None, trace=None):
     """trace = {"name", "external_id", "session_id", "tags", "metadata"} (모두 선택). Langfuse가 켜져 있으면
-    트레이스 하나를 만들고 결과의 trace_id에 넣는다. 꺼져 있으면 trace_id는 None."""
+    트레이스 하나를 만들고 결과의 trace_id에 넣음. 꺼져 있으면 trace_id는 None."""
     graph = graph or build_graph()
     trace = trace or {}
     trace_id = None
-    usage = UsageCallback()  # 전문가 에이전트 안의 호출까지 포함해 모든 LLM·도구 호출을 센다
+    usage = UsageCallback()  # 전문가 에이전트 안의 호출까지 포함해 모든 LLM·도구 호출을 셈
     callbacks = [*(callbacks or []), usage]
     metadata = {}
     if tracing.enabled():
@@ -62,7 +62,7 @@ def ask(question, graph=None, callbacks=None, trace=None):
     final = next((_text(m.content) for m in reversed(msgs) if isinstance(m, AIMessage)
                   and not m.tool_calls), None)
     return {"question": question, "answer": final, "tool_calls": calls,
-            # tools_called: 실제 데이터 도구(query_db 등)만. 멀티 에이전트의 위임(ask_*)은 delegations에 따로 둔다.
+            # tools_called: 실제 데이터 도구(query_db 등)만. 멀티 에이전트의 위임(ask_*)은 delegations에 따로 둠.
             "tools_called": [t for t in usage.tools if not t.startswith("ask_")],
             "delegations": [t for t in usage.tools if t.startswith("ask_")],
             "tokens": usage.tokens, "error": error,

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 소스를 올리고 서버에서 DB 복원·API 기동. 인자: 서버 IP. (ssh/scp만, 이 PC에 AWS CLI 불필요)
-# 비밀은 올리지 않는다: 서버가 자기 IAM 역할로 SSM에서 읽는다(deploy/fetch_secrets.sh, 6단계).
+# 비밀은 올리지 않음: 서버가 자기 IAM 역할로 SSM에서 읽음(deploy/fetch_secrets.sh, 6단계).
 # 사전: /pharma/api_key, /pharma/anthropic_api_key 파라미터 (deploy/terraform/README.md)
 set -euo pipefail
 IP=${1:?서버 IP}; K=~/.ssh/pharma-p5.pem; O="-i $K -o StrictHostKeyChecking=accept-new"

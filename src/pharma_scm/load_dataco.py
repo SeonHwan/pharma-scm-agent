@@ -1,6 +1,6 @@
-"""DataCo 주문·배송 성과를 약품 SKU에 매핑해 sales_orders 행으로 만든다.
+"""DataCo 주문·배송 성과를 약품 SKU에 매핑해 sales_orders 행으로 만듦.
 
-실제 약품 수요가 아니라 수요·배송 패턴의 대역(stand-in)이다.
+실제 약품 수요가 아니라 수요·배송 패턴의 대역(stand-in).
 """
 
 import csv
@@ -21,7 +21,7 @@ def read_rows():
 
 
 def sku_map(rows, skus):
-    """DataCo Product Card Id를 오름차순으로 세워 SKU에 순환 배정한다."""
+    """DataCo Product Card Id를 오름차순으로 세워 SKU에 순환 배정."""
     pids = sorted({int(r["Product Card Id"]) for r in rows})
     return {pid: skus[i % len(skus)] for i, pid in enumerate(pids)}
 

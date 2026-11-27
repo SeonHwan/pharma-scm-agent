@@ -1,7 +1,7 @@
-"""규정 검색 벤치마크의 질의를 Claude Opus 5.5로 생성한다.
+"""규정 검색 벤치마크의 질의를 Claude Opus 5.5로 생성.
 
-새 문서 15개의 섹션마다 질의를 1개씩 만든다. 코퍼스 전체(25개 문서)를 시스템 프롬프트에 넣고 캐시 지점을 둬서
-15번의 호출이 같은 코퍼스를 한 번만 쓰고 나머지는 캐시에서 읽게 한다. 기본은 --dry-run(API 호출 없음)이다.
+새 문서 15개의 섹션마다 질의를 1개씩 만듦. 코퍼스 전체(25개 문서)를 시스템 프롬프트에 넣고 캐시 지점을 둬서
+15번의 호출이 같은 코퍼스를 한 번만 쓰고 나머지는 캐시에서 읽게 함. 기본은 --dry-run(API 호출 없음).
 
     uv run python -m pharma_scm.retrieval.gen_queries                # 추정만
     uv run python -m pharma_scm.retrieval.gen_queries --only 12 --run  # 문서 하나만 실제 생성(시험)
@@ -18,7 +18,7 @@ from . import corpus, topics
 
 MODEL = "claude-opus-5-5"  # 사전 등록 9-1: 질의 생성 모델
 MAX_TOKENS = 16000
-# 단가(100만 토큰당 달러). 2026-11-03에 확인한 값이라 바뀌었을 수 있다. 캐시 쓰기는 입력의 1.25배.
+# 단가(100만 토큰당 달러). 2026-11-03에 확인한 값이라 바뀌었을 수 있음. 캐시 쓰기는 입력의 1.25배.
 PRICE_IN, PRICE_OUT, PRICE_CACHE_READ, CACHE_WRITE_X = 4.0, 20.0, 0.20, 1.25
 
 OUT_PATH = config.ROOT / "eval" / "rag" / "queries_v2.jsonl"
@@ -49,7 +49,7 @@ def render_corpus(secs):
 
 
 def system_blocks(secs):
-    """캐시 지점은 코퍼스 블록에 둔다. 호출마다 같은 내용이어야 캐시가 읽힌다."""
+    """캐시 지점은 코퍼스 블록에 둠. 호출마다 같은 내용이어야 캐시가 읽힘."""
     return [
         {"type": "text", "text": INSTRUCTION},
         {"type": "text", "text": render_corpus(secs), "cache_control": {"type": "ephemeral"}},
@@ -73,7 +73,7 @@ def parse_json_array(text):
 
 
 def validate(items, targets):
-    """(심각한 문제, 경고)를 돌려준다. 심각한 문제가 있으면 저장하지 않는다."""
+    """(심각한 문제, 경고)를 돌려줌. 심각한 문제가 있으면 저장하지 않음."""
     problems, warnings = [], []
     if len(items) != len(targets):
         problems.append(f"항목 수가 {len(items)}개다(기대 {len(targets)}개)")
@@ -117,7 +117,7 @@ def dry_run(docs, secs):
         n_out += len(t) * 170
     n = len(docs)
     print(f"호출 {n}회, 호출마다 달라지는 입력 합계 약 {n_user:,}자, 출력 합계 약 {n_out:,}자(질의, fact, 형식)")
-    # 첫 호출은 캐시 쓰기, 나머지는 캐시 읽기. 출력에는 생각(thinking) 토큰이 더해진다(상한은 4배로 본다).
+    # 첫 호출은 캐시 쓰기, 나머지는 캐시 읽기. 출력에는 생각(thinking) 토큰이 더해짐(상한은 4배로 봄).
     cost_lo = (sys_chars * CACHE_WRITE_X * PRICE_IN + (n - 1) * sys_chars * PRICE_CACHE_READ
                + n_user * PRICE_IN + n_out * PRICE_OUT) / 1e6
     cost_hi = (sys_chars * CACHE_WRITE_X * PRICE_IN + (n - 1) * sys_chars * PRICE_CACHE_READ

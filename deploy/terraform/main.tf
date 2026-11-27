@@ -16,7 +16,7 @@ provider "aws" {
   }
 }
 
-# 6줄: create-key-pair. 개인키는 로컬에서 만들고 공개키만 AWS에 등록한다.
+# 6줄: create-key-pair. 개인키는 로컬에서 만들고 공개키만 AWS에 등록.
 resource "tls_private_key" "p5" {
   algorithm = "ED25519"
 }
@@ -26,7 +26,7 @@ resource "aws_key_pair" "p5" {
   public_key = tls_private_key.p5.public_key_openssh
 }
 
-# 6~7줄: pem 저장과 chmod 600. server_up.sh가 이 경로를 그대로 쓴다.
+# 6~7줄: pem 저장과 chmod 600. server_up.sh가 이 경로를 그대로 사용.
 resource "local_sensitive_file" "pem" {
   content         = tls_private_key.p5.private_key_openssh
   filename        = pathexpand("~/.ssh/pharma-p5.pem")
@@ -43,7 +43,7 @@ data "aws_ssm_parameter" "ami" {
   name = "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64"
 }
 
-# 9~11줄: 보안 그룹. 22·8000을 허용 IP 하나에만 연다.
+# 9~11줄: 보안 그룹. 22·8000을 허용 IP 하나에만 개방.
 resource "aws_security_group" "p5" {
   name        = "pharma-p5"
   description = "pharma p5 temp"
@@ -63,8 +63,8 @@ resource "aws_security_group" "p5" {
     protocol    = "tcp"
     cidr_blocks = [var.allowed_cidr]
   }
-  # CLI로 만든 SG는 아웃바운드 전체 허용이 기본이지만 Terraform은 명시하지 않으면 지운다.
-  # 없으면 서버가 dnf·docker pull·Anthropic API를 호출하지 못한다.
+  # CLI로 만든 SG는 아웃바운드 전체 허용이 기본이지만 Terraform은 명시하지 않으면 삭제.
+  # 없으면 서버가 dnf·docker pull·Anthropic API를 호출하지 못함.
   egress {
     from_port   = 0
     to_port     = 0
@@ -80,7 +80,7 @@ resource "aws_instance" "p5" {
   key_name               = aws_key_pair.p5.key_name
   vpc_security_group_ids = [aws_security_group.p5.id]
 
-  # 서버 안에서 shutdown 하면 중지가 아니라 삭제(user-data.sh가 3시간 뒤 종료를 예약한다)
+  # 서버 안에서 shutdown 하면 중지가 아니라 삭제(user-data.sh가 3시간 뒤 종료를 예약)
   instance_initiated_shutdown_behavior = "terminate"
 
   user_data                   = file("${path.module}/../user-data.sh")

@@ -7,7 +7,7 @@ from langchain_core.outputs import ChatGeneration, ChatResult
 
 from pharma_scm import config
 
-# 시험은 .env에 Langfuse 키가 있어도 트레이스를 보내지 않는다(tests/test_tracing.py는 개별로 켠다).
+# 시험은 .env에 Langfuse 키가 있어도 트레이스를 보내지 않음(tests/test_tracing.py는 개별로 켬).
 os.environ["LANGFUSE_TRACING_ENABLED"] = "false"
 
 

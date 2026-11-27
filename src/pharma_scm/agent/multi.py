@@ -1,10 +1,10 @@
-"""멀티 에이전트(M): 감독 에이전트가 전문가 에이전트 3개를 도구처럼 부른다.
+"""멀티 에이전트(M): 감독 에이전트가 전문가 에이전트 3개를 도구처럼 부름.
 
-- 감독: 데이터 도구를 직접 쓰지 않는다. 질문을 나눠 전문가에게 맡기고(ask_*), 받은 보고로 최종 답을 쓴다.
+- 감독: 데이터 도구를 직접 쓰지 않음. 질문을 나눠 전문가에게 맡기고(ask_*), 받은 보고로 최종 답을 씀.
 - 전문가: DB 분석가(query_db), 결품 담당(get_shortage), 규정 담당(search_sop). 각자 자기 도구 하나로 여러 단계를 처리하고
-  결과를 글로 보고한다. 전문가는 서로의 결과를 모르므로, 필요한 정보(성분명 목록 등)는 감독이 요청에 담아 넘긴다.
-- 단일 에이전트(S)와 비교가 공정하도록 모델, 도구, 프롬프트 문구(prompt.py의 절)는 같다. 다른 것은 구조와,
-  구조 때문에 필요한 역할 설명뿐이다(아래 *_ROLE).
+  결과를 글로 보고. 전문가는 서로의 결과를 모르므로, 필요한 정보(성분명 목록 등)는 감독이 요청에 담아 넘김.
+- 단일 에이전트(S)와 비교가 공정하도록 모델, 도구, 프롬프트 문구(prompt.py의 절)는 같음. 다른 것은 구조와,
+  구조 때문에 필요한 역할 설명뿐(아래 *_ROLE).
 """
 
 from langchain_core.messages import AIMessage, HumanMessage
@@ -50,7 +50,7 @@ SOP_PROMPT = SOP_ROLE
 
 
 def _report(graph, task, config):
-    """전문가 그래프에 요청 하나를 넣고 마지막 답을 보고문으로 돌려준다. 콜백(토큰 집계, Langfuse)은 config로 이어진다."""
+    """전문가 그래프에 요청 하나를 넣고 마지막 답을 보고문으로 돌려줌. 콜백(토큰 집계, Langfuse)은 config로 이어짐."""
     out = graph.invoke({"messages": [HumanMessage(task)]}, {**(config or {}), "recursion_limit": RECURSION_LIMIT})
     last = next((m for m in reversed(out["messages"]) if isinstance(m, AIMessage) and not m.tool_calls), None)
     if last is None:

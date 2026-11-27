@@ -1,5 +1,5 @@
 # 앱 태스크를 desired_count개로 유지하는 서비스. 죽거나 멈춘 태스크는 새로 띄우고,
-# 새 태스크의 IP는 타깃 그룹에 등록하고 내려가는 태스크의 IP는 해제한다.
+# 새 태스크의 IP는 타깃 그룹에 등록하고 내려가는 태스크의 IP는 해제.
 resource "aws_ecs_service" "api" {
   name            = "pharma-api"
   cluster         = aws_ecs_cluster.main.id
@@ -7,35 +7,35 @@ resource "aws_ecs_service" "api" {
   desired_count   = var.desired_count
   launch_type     = "FARGATE"
 
-  # 새 태스크가 뜬 직후 헬스 체크가 실패해도 120초 동안은 교체하지 않는다(앱이 시작하는 시간).
-  # 시작할 때 규정 검색 모델을 읽어 로컬 0.5 CPU에서 /health까지 약 13초였다. 첫 실행의 디스크 읽기를 감안해 넉넉히 둔다.
+  # 새 태스크가 뜬 직후 헬스 체크가 실패해도 120초 동안은 교체하지 않음(앱이 시작하는 시간).
+  # 시작할 때 규정 검색 모델을 읽어 로컬 0.5 CPU에서 /health까지 약 13초. 첫 실행의 디스크 읽기를 감안해 넉넉히 설정.
   health_check_grace_period_seconds = 120
 
-  # 롤링 배포가 계속 실패하면 배포를 멈추고 직전 리비전으로 되돌린다. 실제 롤백은 아직 검증하지 않았다.
+  # 롤링 배포가 계속 실패하면 배포를 멈추고 직전 리비전으로 되돌림. 실제 롤백은 아직 검증하지 않음.
   deployment_circuit_breaker {
     enable   = true
     rollback = true
   }
 
-  # 태스크가 놓일 서브넷은 ALB와 같은 목록이다. NAT가 없으므로 퍼블릭 IP로 ECR과 SSM에 나간다.
+  # 태스크가 놓일 서브넷은 ALB와 같은 목록. NAT가 없으므로 퍼블릭 IP로 ECR과 SSM에 접근.
   network_configuration {
     subnets          = data.aws_subnets.selected.ids
     security_groups  = [aws_security_group.task.id]
     assign_public_ip = true
   }
 
-  # 서비스에는 타깃 그룹 ARN, 컨테이너 이름, 컨테이너 포트만 저장된다. 이름은 태스크 정의와 같아야 한다.
+  # 서비스에는 타깃 그룹 ARN, 컨테이너 이름, 컨테이너 포트만 저장됨. 이름은 태스크 정의와 같아야 함.
   load_balancer {
     target_group_arn = aws_lb_target_group.api.arn
     container_name   = "api"
     container_port   = 8000
   }
 
-  # 타깃 그룹이 리스너에 연결된 뒤에야 서비스를 만들 수 있다(ARN을 참조하지 않아 순서를 직접 적는다).
+  # 타깃 그룹이 리스너에 연결된 뒤에야 서비스를 만들 수 있음(ARN을 참조하지 않아 순서를 직접 기재).
   depends_on = [aws_lb_listener.http]
 
-  # 배포(GitHub Actions)가 서비스를 새 태스크 정의 리비전으로 바꾼다. 이 값을 Terraform이 계속 비교하면
-  # 다음 plan에서 서비스를 코드의 옛 리비전으로 되돌리려 하므로, 태스크 정의는 Terraform이 만들 때만 정하고 이후 변경은 무시한다.
+  # 배포(GitHub Actions)가 서비스를 새 태스크 정의 리비전으로 바꿈. 이 값을 Terraform이 계속 비교하면
+  # 다음 plan에서 서비스를 코드의 옛 리비전으로 되돌리려 하므로, 태스크 정의는 Terraform이 만들 때만 정하고 이후 변경은 무시.
   lifecycle {
     ignore_changes = [task_definition]
   }

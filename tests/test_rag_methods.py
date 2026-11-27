@@ -1,5 +1,5 @@
-# R0가 당시 운영 코드(run_search_sop)와 같은 순위·점수를 냈다는 확인은 커밋 14114b4의 테스트로 했다.
-# 운영 검색이 R3로 바뀐 뒤에는 R0는 벤치마크 기준선으로만 남는다.
+# R0가 당시 운영 코드(run_search_sop)와 같은 순위·점수를 냈다는 확인은 커밋 14114b4의 테스트로 함.
+# 운영 검색이 R3로 바뀐 뒤에는 R0는 벤치마크 기준선으로만 남음.
 
 from pharma_scm.retrieval import corpus
 from pharma_scm.retrieval.methods import Bm25, TfidfCosine

@@ -1,12 +1,12 @@
-"""평가셋 전체를 에이전트에 돌려 문항별 결과를 data/runs/<run_id>/<문항id>.json에 저장한다.
+"""평가셋 전체를 에이전트에 돌려 문항별 결과를 data/runs/<run_id>/<문항id>.json에 저장.
 
-이미 결과 파일이 있는 문항은 건너뛴다(중단 후 이어서 실행). 결과를 보고 프롬프트를 바꾸면
-PROMPT_VERSION을 올리고 새 run_id로 돌린다 — 기존 결과를 덮어쓰지 않는다.
+이미 결과 파일이 있는 문항은 건너뜀(중단 후 이어서 실행). 결과를 보고 프롬프트를 바꾸면
+PROMPT_VERSION을 올리고 새 run_id로 돌림 — 기존 결과를 덮어쓰지 않음.
 실행: uv run python -m pharma_scm.evalset.run_eval [--dry-run] [--run-id ID] [--workers N]
       [--ids A001,B002 ...] [--sha 커밋해시] [--strict] [--set v1|v2] [--split dev|test]
---ids로 일부 문항만, --sha로 run_id에 커밋 해시를 넣어 옛 결과 재사용을 막는다(기본 run_id는 main_<버전>).
---strict는 실행 중 예외로 실패한 문항이 있으면 종료코드 1로 끝낸다(스모크·CI용). 기본은 항상 0.
---set v2는 평가셋 v2(eval/questions_v2.jsonl), --split은 v2의 dev/test 절반만 고른다.
+--ids로 일부 문항만, --sha로 run_id에 커밋 해시를 넣어 옛 결과 재사용을 막음(기본 run_id는 main_<버전>).
+--strict는 실행 중 예외로 실패한 문항이 있으면 종료코드 1로 끝냄(스모크·CI용). 기본은 항상 0.
+--set v2는 평가셋 v2(eval/questions_v2.jsonl), --split은 v2의 dev/test 절반만 고름.
 """
 
 import argparse
@@ -38,7 +38,7 @@ def load_questions(qset="v1"):
 
 
 def parse_ids(text):
-    """쉼표·공백으로 구분된 문항 ID 목록(파일 내용을 그대로 넘겨도 된다). 중복은 첫 번째만 남긴다."""
+    """쉼표·공백으로 구분된 문항 ID 목록(파일 내용을 그대로 넘겨도 됨). 중복은 첫 번째만 남김."""
     return list(dict.fromkeys(x for x in re.split(r"[,\s]+", text) if x))
 
 
@@ -59,7 +59,7 @@ def default_run_id(sha, qset="v1"):
 
 
 def count_problems(results):
-    """이번에 실행한 결과에서 (실행 오류 문항 수, 형식 위반 문항 수). 오류 문항은 형식 위반에서 뺀다."""
+    """이번에 실행한 결과에서 (실행 오류 문항 수, 형식 위반 문항 수). 오류 문항은 형식 위반에서 뺌."""
     errors = sum(1 for r in results if r["error"])
     fmt_bad = sum(1 for r in results if not r["error"] and not r["grade"]["format_ok"])
     return errors, fmt_bad
@@ -72,7 +72,7 @@ def run_one(q, graph, out_dir, run_id=None, qset="v1", arch="S"):
                           "split": q.get("split"), "arch": arch}}
     try:
         r = ask(q["question"], graph, trace=trace)
-    except Exception as e:  # 한 문항의 실패가 전체 실행을 멈추지 않게 한다
+    except Exception as e:  # 한 문항의 실패가 전체 실행을 멈추지 않게 함
         r = {"question": q["question"], "answer": None, "tool_calls": [], "tools_called": [],
              "tokens": {"input": 0, "output": 0, "llm_calls": 0}, "latency_s": None,
              "error": f"exception:{type(e).__name__}:{str(e)[:200]}", "prompt_cache": PROMPT_CACHE,
@@ -114,7 +114,7 @@ def main(argv=None):
     print(f"run_id={a.run_id} 구조 {a.arch} 프롬프트 {PROMPT_VERSION} {PROMPT_SHA} 모델 {config.AGENT_MODEL}")
     print(f"문항 {len(qs)}개 중 실행할 것 {len(todo)}개 (이미 있는 {len(qs) - len(todo)}개는 건너뜀)")
     if a.arch == "M":
-        # 멀티 에이전트는 전문가 호출이 더해진다. 평가셋 v3에서 단일 109회 대비 351회(약 3.2배)였다.
+        # 멀티 에이전트는 전문가 호출이 더해짐. 평가셋 v3에서 단일 109회 대비 351회(약 3.2배).
         print(f"예상 LLM 호출 {len(todo) * 6}~{len(todo) * 12}회 (v3 실측 평균 11.7회/문항), "
               f"상한은 감독 기준 {len(todo) * (MAX_TOOL_ROUNDS + 1)}회에 전문가 호출이 따로 더해진다")
     else:

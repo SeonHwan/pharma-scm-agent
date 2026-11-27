@@ -1,9 +1,9 @@
-"""평가셋 v2를 만든다. v1(eval/questions.jsonl)은 그대로 둔다.
+"""평가셋 v2 생성. v1(eval/questions.jsonl)은 그대로 둠.
 
-- G(새 규정 문항 126개): 검색 벤치마크에서 검증을 마친 질의(eval/rag/queries_v2_final.jsonl)를 그대로 쓴다.
-  정답은 질의를 만든 섹션 id다.
-- H(어려운 DB 문항 30개): 여러 테이블 조인, 날짜 구간, 지표 정의를 질문에 명시한 문항. 정답은 DB에서 SQL로 계산한다.
-- 문항마다 split(dev/test)을 붙인다. 유형별로 문항 id를 시드 고정으로 섞어 절반씩 나눈다.
+- G(새 규정 문항 126개): 검색 벤치마크에서 검증을 마친 질의(eval/rag/queries_v2_final.jsonl)를 그대로 사용.
+  정답은 질의를 만든 섹션 id.
+- H(어려운 DB 문항 30개): 여러 테이블 조인, 날짜 구간, 지표 정의를 질문에 명시한 문항. 정답은 DB에서 SQL로 계산.
+- 문항마다 split(dev/test)을 붙임. 유형별로 문항 id를 시드 고정으로 섞어 절반씩 나눔.
 
 실행: uv run python -m pharma_scm.evalset.build_evalset_v2  → eval/questions_v2.jsonl
 """
@@ -146,7 +146,7 @@ def build_g():
 
 
 def assign_split(items):
-    """유형별로 id를 시드 고정으로 섞어 앞 절반은 dev, 나머지는 test(홀수면 test가 하나 많다)."""
+    """유형별로 id를 시드 고정으로 섞어 앞 절반은 dev, 나머지는 test(홀수면 test가 하나 많음)."""
     rng = random.Random(SEED)
     for typ in sorted({q["type"] for q in items}):
         ids = sorted(q["id"] for q in items if q["type"] == typ)

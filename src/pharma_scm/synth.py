@@ -1,7 +1,7 @@
 """결정적 합성 데이터: 공급사, SKU 선정, 재고 로트, 발주.
 
-모든 난수는 문자열 시드의 random.Random으로만 만든다(같은 입력 → 같은 바이트).
-경계 사례(안전재고 정확히 같음/1 모자람/0, 유통기한 +29/+30/+31일 등)를 의도적으로 심는다.
+모든 난수는 문자열 시드의 random.Random으로만 만듦(같은 입력 → 같은 바이트).
+경계 사례(안전재고 정확히 같음/1 모자람/0, 유통기한 +29/+30/+31일 등)를 의도적으로 심음.
 """
 
 import random
@@ -20,7 +20,7 @@ _SUPPLIERS = [
     ("Alpina Pharma AG", "CH"), ("Baltic Drug Trade", "LT"), ("Orient Chem Source", "CN"),
 ]
 
-# 결품 기록이 없는 성분(음성 사례). 스냅샷 성분명의 첫 단어와 겹치지 않는 것만 쓴다.
+# 결품 기록이 없는 성분(음성 사례). 스냅샷 성분명의 첫 단어와 겹치지 않는 것만 씀.
 _NO_RECORD = [
     ("Atorvastatin Calcium Tablet", "Tablet", "Cardiovascular"),
     ("Amlodipine Besylate Tablet", "Tablet", "Cardiovascular"),
@@ -49,7 +49,7 @@ def suppliers():
 
 
 def select_skus(records):
-    """openFDA 성분명에서 층화 추출 + 결품 기록 없는 성분을 더해 SKU 목록을 만든다."""
+    """openFDA 성분명에서 층화 추출 + 결품 기록 없는 성분을 더해 SKU 목록을 만듦."""
     by_name = defaultdict(list)
     for rec in records:
         by_name[rec["generic_name"]].append(rec)
@@ -80,7 +80,7 @@ def select_skus(records):
     for name, form, cat in _NO_RECORD:
         assert name.split()[0].lower() not in firsts, f"{name}: 스냅샷에 비슷한 성분이 있다"
         items.append((name, form, cat))
-    r.shuffle(items)  # SKU 번호가 결품 여부를 드러내지 않게 한다
+    r.shuffle(items)  # SKU 번호가 결품 여부를 드러내지 않게 함
     return [(f"SKU-{i:03d}",) + it for i, it in enumerate(items, 1)]
 
 
@@ -133,10 +133,10 @@ def lots(product_rows):
         return dict(qty=qty, expiry=config.AS_OF + timedelta(days=400), wh=r.choice(WAREHOUSES),
                     status="available", received=config.AS_OF - timedelta(days=30))
 
-    for _ in range(3):   # 안전재고와 정확히 같다(미달 아님)
+    for _ in range(3):   # 안전재고와 정확히 같음(미달 아님)
         s = pool.pop()
         per_sku[s] = [far(safety_of[s])]
-    for _ in range(3):   # 1 모자란다(미달)
+    for _ in range(3):   # 1 모자람(미달)
         s = pool.pop()
         per_sku[s] = [far(safety_of[s] - 1)]
     for _ in range(3):   # 재고 0

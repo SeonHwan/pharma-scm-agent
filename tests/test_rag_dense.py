@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-# 실제 모델(각 약 2GB)을 내려받아 쓰는 시험이라 RUN_MODEL_TESTS=1일 때만 돌린다(CI 기본은 건너뜀).
+# 실제 모델(각 약 2GB)을 내려받아 쓰는 시험이라 RUN_MODEL_TESTS=1일 때만 돌림(CI 기본은 건너뜀).
 if not os.environ.get("RUN_MODEL_TESTS"):
     pytest.skip("RUN_MODEL_TESTS=1일 때만 실행", allow_module_level=True)
 

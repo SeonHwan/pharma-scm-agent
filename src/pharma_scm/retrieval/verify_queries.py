@@ -1,8 +1,8 @@
-"""생성한 질의를 다른 회사 모델(OpenAI)이 독립적으로 검증한다.
+"""생성한 질의를 다른 회사 모델(OpenAI)이 독립적으로 검증.
 
-검증 모델에게는 코퍼스와 질의 문장만 주고, 정답 섹션 id와 fact는 **보여 주지 않는다**. 모델이 "이 질문에 답을 줄 수
-있는 섹션을 모두 고르라"는 요청에 고른 집합이 정답 섹션 하나와 다르면 그 질의를 표시한다. 표시는 사람이 보는 신호이고,
-제외는 사용자가 확인한 뒤에 한다. 질의는 시드 고정 난수로 섞어 묶음(약 25개)으로 보낸다(순서와 문서별 묶음의 영향을 줄임).
+검증 모델에게는 코퍼스와 질의 문장만 주고, 정답 섹션 id와 fact는 **보여 주지 않음**. 모델이 "이 질문에 답을 줄 수
+있는 섹션을 모두 고르라"는 요청에 고른 집합이 정답 섹션 하나와 다르면 그 질의를 표시. 표시는 사람이 보는 신호이고,
+제외는 사용자가 확인한 뒤에 함. 질의는 시드 고정 난수로 섞어 묶음(약 25개)으로 보냄(순서와 문서별 묶음의 영향을 줄임).
 
     uv run --group gen python -m pharma_scm.retrieval.verify_queries                  # 추정만
     uv run --group gen python -m pharma_scm.retrieval.verify_queries --batch 1 --run  # 첫 묶음만 시험
@@ -48,7 +48,7 @@ INSTRUCTION = """당신은 규정 검색 평가의 검증자다. 아래 [코퍼�
 
 
 def make_batches(rows):
-    """질의를 시드 고정으로 섞고 25개 안팎의 묶음으로 나눈다. 묶음 번호는 1부터."""
+    """질의를 시드 고정으로 섞고 25개 안팎의 묶음으로 나눔. 묶음 번호는 1부터."""
     order = list(range(len(rows)))
     random.Random(SEED).shuffle(order)
     n = math.ceil(len(rows) / BATCH_SIZE)
@@ -165,7 +165,7 @@ def run(rows, secs, only, force):
 
 
 def run_controls(secs):
-    """통제 질의(§9-6)를 같은 지시로 검증기에 넣고, 사전 등록한 판정 규칙으로 통과 여부를 적는다."""
+    """통제 질의(§9-6)를 같은 지시로 검증기에 넣고, 사전 등록한 판정 규칙으로 통과 여부를 적음."""
     from openai import OpenAI
 
     config.load_env()
